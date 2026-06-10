@@ -1,29 +1,58 @@
-# UPM hidden folders (Samples~, Documentation~) must be tracked —
-# re-include them in case a global gitignore matches *~
-!*~/
-!Samples~/**
-!Documentation~/**
+# ── Unity development project (root) ──────────────────────────────
+# This repo is a Unity project used to develop & test the embedded
+# package at Packages/com.autech.levelplay-mediation. The package is
+# distributed via git URL (?path=) + version tags. See RELEASING.md.
 
-# OS
-.DS_Store
-Thumbs.db
-Desktop.ini
+# Unity-generated, machine-local — never commit
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]serSettings/
+[Mm]emoryCaptures/
+.vs/
+*.csproj
+*.sln
+*.suo
+*.unityproj
 
-# Editors / IDEs
+# IDEs / OS
 .idea/
 .vscode/
 *.swp
 *.user
-
-# Unity artifacts that must never live in a UPM package repo
-# (NOTE: .meta files ARE tracked — required for UPM packages)
-Library/
-Temp/
-Obj/
-Logs/
-UserSettings/
-*.csproj
-*.sln
+.DS_Store
+Thumbs.db
+Desktop.ini
 
 # Node (in case tooling is added later)
 node_modules/
+
+# External Dependency Manager (EDM4U / "MobileDependencyResolver") is a
+# third-party redistributable provided by the LevelPlay SDK itself — it must
+# NOT be vendored in this wrapper repo (a loose Assets/ copy alongside the one
+# LevelPlay ships causes a fatal "multiple precompiled assemblies" error).
+Assets/MobileDependencyResolver/
+Assets/MobileDependencyResolver.meta
+Assets/ExternalDependencyManager/
+Assets/ExternalDependencyManager.meta
+Assets/PlayServicesResolver/
+Assets/PlayServicesResolver.meta
+
+# Release artifacts produced locally (the .unitypackage / tarball)
+/dist/
+*.unitypackage
+*.tgz
+
+# ── Keep these TRACKED (they define the reproducible dev project) ──
+#   Packages/manifest.json, Packages/packages-lock.json
+#   ProjectSettings/**
+#   Packages/com.autech.levelplay-mediation/**  (the package itself)
+#
+# UPM hidden folders (Samples~, Documentation~) must stay tracked —
+# re-include in case a global gitignore matches *~
+!*~/
+!**/Samples~/**
+!**/Documentation~/**
