@@ -1,0 +1,38 @@
+{
+  "name": "com.autech.levelplay-mediation",
+  "version": "1.0.0",
+  "displayName": "Autech LevelPlay Mediation",
+  "description": "Unity LevelPlay (Unity Ads) mediation wrapper with built-in GDPR/CCPA/COPPA consent, iOS ATT handling, and encrypted Remove-Ads persistence. Mirrors the Autech AdMob Mediation package API so game code migrates with namespace changes only.",
+  "unity": "2021.3",
+  "license": "MIT",
+  "author": {
+    "name": "AU-TECH Solutions",
+    "url": "https://autechsolutions.netlify.app"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BadranRaza/com.autech.levelplay-mediation.git"
+  },
+  "documentationUrl": "https://github.com/BadranRaza/com.autech.levelplay-mediation#readme",
+  "changelogUrl": "https://github.com/BadranRaza/com.autech.levelplay-mediation/blob/main/CHANGELOG.md",
+  "licensesUrl": "https://github.com/BadranRaza/com.autech.levelplay-mediation/blob/main/LICENSE.md",
+  "dependencies": {
+    "com.unity.services.levelplay": "9.4.1"
+  },
+  "keywords": [
+    "ads",
+    "levelplay",
+    "unity-ads",
+    "mediation",
+    "monetization",
+    "consent",
+    "att"
+  ],
+  "samples": [
+    {
+      "displayName": "Prefabs",
+      "description": "Ready-to-use VerifyandInitializeLevelPlay prefab.",
+      "path": "Samples~/Prefabs"
+    }
+  ]
+}

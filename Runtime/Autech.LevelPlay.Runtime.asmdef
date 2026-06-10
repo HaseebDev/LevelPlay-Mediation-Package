@@ -1,0 +1,28 @@
+{
+    "name": "Autech.LevelPlay.Runtime",
+    "rootNamespace": "Autech.LevelPlay",
+    "references": [
+        "Unity.LevelPlay",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.services.levelplay",
+            "expression": "8.0.0",
+            "define": "LEVELPLAY_INSTALLED"
+        },
+        {
+            "name": "com.unity.inputsystem",
+            "expression": "1.0.0",
+            "define": "INPUTSYSTEM_PACKAGE"
+        }
+    ],
+    "noEngineReferences": false
+}

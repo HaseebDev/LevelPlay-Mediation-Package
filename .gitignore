@@ -1,0 +1,29 @@
+# UPM hidden folders (Samples~, Documentation~) must be tracked —
+# re-include them in case a global gitignore matches *~
+!*~/
+!Samples~/**
+!Documentation~/**
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors / IDEs
+.idea/
+.vscode/
+*.swp
+*.user
+
+# Unity artifacts that must never live in a UPM package repo
+# (NOTE: .meta files ARE tracked — required for UPM packages)
+Library/
+Temp/
+Obj/
+Logs/
+UserSettings/
+*.csproj
+*.sln
+
+# Node (in case tooling is added later)
+node_modules/
