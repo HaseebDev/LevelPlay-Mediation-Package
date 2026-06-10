@@ -11,11 +11,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/BadranRaza/com.autech.levelplay-mediation.git"
+    "url": "git+https://github.com/HaseebDev/com.autech.levelplay-mediation.git"
   },
-  "documentationUrl": "https://github.com/BadranRaza/com.autech.levelplay-mediation#readme",
-  "changelogUrl": "https://github.com/BadranRaza/com.autech.levelplay-mediation/blob/main/CHANGELOG.md",
-  "licensesUrl": "https://github.com/BadranRaza/com.autech.levelplay-mediation/blob/main/LICENSE.md",
+  "documentationUrl": "https://github.com/HaseebDev/com.autech.levelplay-mediation#readme",
+  "changelogUrl": "https://github.com/HaseebDev/com.autech.levelplay-mediation/blob/main/CHANGELOG.md",
+  "licensesUrl": "https://github.com/HaseebDev/com.autech.levelplay-mediation/blob/main/LICENSE.md",
   "dependencies": {
     "com.unity.services.levelplay": "9.4.1"
   },
