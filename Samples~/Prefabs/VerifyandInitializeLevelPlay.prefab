@@ -42,23 +42,27 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 000719c100f494a8a895fec5326873e2, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
-  androidAppKey:
-  iosAppKey:
-  androidBannerAdUnitId:
-  androidInterstitialAdUnitId:
-  androidRewardedAdUnitId:
-  iosBannerAdUnitId:
-  iosInterstitialAdUnitId:
-  iosRewardedAdUnitId:
+  m_Name: 
+  m_EditorClassIdentifier: 
+  adsEnabled: 1
+  androidAppKey: 
+  iosAppKey: 
+  androidBannerAdUnitId: 
+  androidInterstitialAdUnitId: 
+  androidRewardedAdUnitId: 
+  iosBannerAdUnitId: 
+  iosInterstitialAdUnitId: 
+  iosRewardedAdUnitId: 
   bannerPosition: 1
   showBannerOnStart: 0
   useAdaptiveBanners: 1
   preferredBannerSize: 4
   removeAds: 0
   enableTestSuite: 0
+  enableAdsOnIosAppOnMac: 0
   showConsentDialog: 1
+  cmpPCode: p-AjqnZCTwP-_0R
+  cmpShowIdfaPopup: 0
   requestAttAuthorization: 1
   tagForChildDirectedTreatment: 0
   privacyPolicyUrl: https://autechsolutions.netlify.app/privacy
