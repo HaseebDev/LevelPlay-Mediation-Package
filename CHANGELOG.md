@@ -1,5 +1,26 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+- **Consent is now a real CMP.** Replaced the placeholder built-in GDPR dialog
+  with an **InMobi CMP (Choice)** integration — Google-certified IAB TCF v2.2,
+  the LevelPlay counterpart to AdMob's Google UMP. `ConsentManager` starts InMobi
+  CMP, reads the IAB `IABTCF_*` consent values from native storage, and exposes
+  `GetConsentType` / `GetTCFConsentString` / `HasConsentForPurpose` and privacy
+  options (`ShowPrivacyOptionsForm`, `ShowCcpaForm`). Integrated via reflection,
+  so the package compiles with or without the InMobi SDK present.
+- Added `MediationConsentManager` (applies CCPA/COPPA to LevelPlay; GDPR flows via
+  the CMP's TCF string) — mirrors the AdMob package.
+- Removed the placeholder `ConsentDialog`.
+- `VerifyLevelPlay` gains a **CMP p-code** field (Consent & Privacy section).
+
+### Repo
+- Renamed repo to `LevelPlay-Mediation-Package`; editable dev copy moved to
+  `Assets/AutechLevelPlay` (the LevelPlay SDK reserves `Assets/LevelPlay`).
+- Added example scene + `AdsExampleUI` (`Samples~/ExampleScene`); `com.unity.ugui`
+  declared as a dependency.
+
 ## [1.0.0] - 2026-06-10
 
 ### Added

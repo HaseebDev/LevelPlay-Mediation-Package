@@ -46,9 +46,13 @@ namespace Autech.LevelPlay
         [Tooltip("LevelPlay officially supports iOS/Android only. Leave OFF to run the game ad-free on Macs.")]
         [SerializeField] private bool enableAdsOnIosAppOnMac = false;
 
-        [Header("Consent & Privacy")]
-        [Tooltip("Show the built-in GDPR consent dialog on first launch.")]
+        [Header("Consent & Privacy (InMobi CMP)")]
+        [Tooltip("Run the InMobi CMP consent flow on first launch (GDPR / IAB TCF).")]
         [SerializeField] private bool showConsentDialog = true;
+        [Tooltip("InMobi CMP account p-code (CMP portal > profile menu; the leading 'p-' is optional). Required to show the consent UI.")]
+        [SerializeField] private string cmpPCode = "";
+        [Tooltip("iOS only: let the CMP show the ATT popup. Leave OFF — this package's own ATT step handles it.")]
+        [SerializeField] private bool cmpShowIdfaPopup = false;
         [Tooltip("Request the iOS App Tracking Transparency prompt before SDK init.")]
         [SerializeField] private bool requestAttAuthorization = true;
         [Tooltip("COPPA: flag all users as child-directed. Leave OFF for general-audience games.")]
@@ -90,6 +94,8 @@ namespace Autech.LevelPlay
                 PreferredBannerSize = preferredBannerSize,
                 BannerPosition = bannerPosition,
                 ShowConsentDialog = showConsentDialog,
+                CmpPCode = NormalizePCode(cmpPCode),
+                CmpShowIdfaPopup = cmpShowIdfaPopup,
                 RequestAttAuthorization = requestAttAuthorization,
                 CcpaOptOut = false,
                 TagForChildDirectedTreatment = tagForChildDirectedTreatment,
@@ -103,6 +109,14 @@ namespace Autech.LevelPlay
                 IosInterstitialAdUnitId = iosInterstitialAdUnitId,
                 IosRewardedAdUnitId = iosRewardedAdUnitId
             };
+        }
+
+        // Accepts the p-code with or without the leading "p-" the CMP portal shows.
+        private static string NormalizePCode(string raw)
+        {
+            if (string.IsNullOrEmpty(raw)) return "";
+            raw = raw.Trim();
+            return raw.StartsWith("p-") ? raw.Substring(2) : raw;
         }
 
         #region Public API (AdMob-package parity)

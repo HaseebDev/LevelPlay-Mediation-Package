@@ -53,6 +53,11 @@ namespace Autech.LevelPlay.DevTools
             CopyTree($"{DevRoot}/Plugins", "Runtime/Plugins");
             CopyTree($"{DevRoot}/Editor",  "Editor");
 
+            // The example UI is a sample, not core — it ships under
+            // Samples~/ExampleScene, never in the distributed Runtime assembly.
+            DeleteRepoFile("Runtime/Scripts/AdsExampleUI.cs");
+            DeleteRepoFile("Runtime/Scripts/AdsExampleUI.cs.meta");
+
             Debug.Log("[Autech] Synced Assets/AutechLevelPlay -> root package (Runtime/, Editor/). " +
                       "Review the example scene under Samples~ manually if it changed.");
         }
@@ -61,6 +66,12 @@ namespace Autech.LevelPlay.DevTools
 
         static string AbsRepoPath(string rel) =>
             Path.GetFullPath(Path.Combine(Application.dataPath, "..", rel));
+
+        static void DeleteRepoFile(string rel)
+        {
+            var p = AbsRepoPath(rel);
+            if (File.Exists(p)) File.Delete(p);
+        }
 
         static void CopyInto(string assetRelPath, string repoRelPath)
         {

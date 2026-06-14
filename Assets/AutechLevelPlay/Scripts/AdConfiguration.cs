@@ -68,7 +68,19 @@ namespace Autech.LevelPlay
         public BannerPosition BannerPosition { get; set; } = BannerPosition.Bottom;
 
         // Consent / privacy settings
+
+        // Runs the InMobi CMP consent flow on init when true. (Field name kept
+        // for AdMob-package parity; it now gates the CMP rather than a dialog.)
         public bool ShowConsentDialog { get; set; } = true;
+
+        // InMobi CMP account p-code (from the InMobi CMP portal profile menu).
+        // Without it, no consent UI is shown. Drop the leading "p-".
+        public string CmpPCode { get; set; } = "";
+
+        // iOS only: let the CMP show the ATT ("Allow tracking") popup. Leave OFF
+        // when AttManager already handles ATT (the default in this package).
+        public bool CmpShowIdfaPopup { get; set; } = false;
+
         public bool RequestAttAuthorization { get; set; } = true;
         public bool CcpaOptOut { get; set; } = false;
         public bool TagForChildDirectedTreatment { get; set; } = false;

@@ -21,6 +21,8 @@ namespace Autech.LevelPlay
         public BannerSize PreferredBannerSize;
         public BannerPosition BannerPosition;
         public bool ShowConsentDialog;
+        public string CmpPCode;
+        public bool CmpShowIdfaPopup;
         public bool RequestAttAuthorization;
         public bool CcpaOptOut;
         public bool TagForChildDirectedTreatment;
@@ -84,6 +86,7 @@ namespace Autech.LevelPlay
         private readonly AdConfiguration config = new AdConfiguration();
         private AdPersistenceManager persistenceManager;
         private ConsentManager consentManager;
+        private MediationConsentManager mediationConsentManager;
 
         private BannerAdController bannerController;
         private InterstitialAdController interstitialController;
@@ -118,6 +121,7 @@ namespace Autech.LevelPlay
             };
 
             consentManager = new ConsentManager(config);
+            mediationConsentManager = new MediationConsentManager(config, consentManager);
         }
 
         #region Initialization
@@ -133,6 +137,8 @@ namespace Autech.LevelPlay
             config.PreferredBannerSize = settings.PreferredBannerSize;
             config.BannerPosition = settings.BannerPosition;
             config.ShowConsentDialog = settings.ShowConsentDialog;
+            config.CmpPCode = settings.CmpPCode;
+            config.CmpShowIdfaPopup = settings.CmpShowIdfaPopup;
             config.RequestAttAuthorization = settings.RequestAttAuthorization;
             config.CcpaOptOut = settings.CcpaOptOut;
             config.TagForChildDirectedTreatment = settings.TagForChildDirectedTreatment;
@@ -194,6 +200,10 @@ namespace Autech.LevelPlay
                 // 1. Consent BEFORE init: LevelPlay wants CCPA/COPPA flags pre-init,
                 //    and GDPR consent must exist before any personalized request.
                 await consentManager.InitializeConsentAsync();
+
+                // GDPR flows via the InMobi CMP's IAB TCF string; this applies the
+                // explicit CCPA/COPPA flags to LevelPlay before init.
+                mediationConsentManager.Apply();
 
                 // 2. ATT BEFORE init: Unity requires the ATT prompt before
                 //    initializing any SDK that may access the IDFA.
@@ -443,8 +453,12 @@ namespace Autech.LevelPlay
         /// <summary>"Personalized" | "NonPersonalized" | "Unknown".</summary>
         public string GetConsentType() => consentManager.GetConsentType();
 
-        /// <summary>CCPA/US-state "do not sell or share" opt-out toggle.</summary>
-        public void SetCcpaOptOut(bool optedOut) => consentManager.SetCcpaOptOut(optedOut);
+        /// <summary>CCPA/US-state "do not sell or share" opt-out toggle. (For the full CMP US-privacy UI use <c>Consent.ShowCcpaForm()</c>.)</summary>
+        public void SetCcpaOptOut(bool optedOut)
+        {
+            config.CcpaOptOut = optedOut;
+            LevelPlayPrivacySettings.SetCCPA(optedOut);
+        }
 
         #endregion
 

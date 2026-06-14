@@ -58,3 +58,7 @@ Assets/PlayServicesResolver.meta
 # our editable copy lives in Assets/AutechLevelPlay.
 Assets/LevelPlay/
 Assets/LevelPlay.meta
+
+# InMobi CMP (Choice) plugin — third-party SDK, imported separately (see INSTALL.md)
+Assets/InMobi/
+Assets/InMobi.meta
