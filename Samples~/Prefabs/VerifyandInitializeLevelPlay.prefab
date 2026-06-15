@@ -45,12 +45,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   adsEnabled: 1
-  androidAppKey: 
-  iosAppKey: 
-  androidBannerAdUnitId: 
-  androidInterstitialAdUnitId: 
-  androidRewardedAdUnitId: 
-  iosBannerAdUnitId: 
+  androidAppKey: 1cc894335
+  iosAppKey:
+  androidBannerAdUnitId: bg93bc6b41au1axf
+  androidInterstitialAdUnitId: yn6mse4tt0z8y0jd
+  androidRewardedAdUnitId: flwj5l2z81oa3fpu
+  iosBannerAdUnitId:
   iosInterstitialAdUnitId: 
   iosRewardedAdUnitId: 
   bannerPosition: 1
@@ -58,8 +58,8 @@ MonoBehaviour:
   useAdaptiveBanners: 1
   preferredBannerSize: 4
   removeAds: 0
-  enableTestSuite: 0
-  enableAdsOnIosAppOnMac: 0
+  testMode: 0
+  autoLaunchTestSuite: 0
   showConsentDialog: 1
   cmpPCode: p-AjqnZCTwP-_0R
   cmpShowIdfaPopup: 0

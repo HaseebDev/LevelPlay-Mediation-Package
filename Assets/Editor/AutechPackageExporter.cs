@@ -19,6 +19,7 @@ namespace Autech.LevelPlay.DevTools
     public static class AutechPackageExporter
     {
         const string DevRoot   = "Assets/AutechLevelPlay";
+        const string InMobiDir = "Assets/InMobi"; // bundled InMobi CMP (Choice) consent plugin
         const string RepoRoot  = ""; // resolved from Application.dataPath/..
 
         [MenuItem("Tools/Autech/Export .unitypackage")]
@@ -34,8 +35,17 @@ namespace Autech.LevelPlay.DevTools
             Directory.CreateDirectory(outDir);
             var outPath = Path.Combine(outDir, $"com.autech.levelplay-mediation-{version}.unitypackage");
 
-            AssetDatabase.ExportPackage(DevRoot, outPath, ExportPackageOptions.Recurse);
-            Debug.Log($"[Autech] Exported v{version} -> {outPath}");
+            // Bundle the InMobi CMP plugin alongside the package so the .unitypackage
+            // is self-contained: it lands under Assets/ → Assembly-CSharp, where the
+            // package's ConsentManager finds ChoiceCMP by reflection.
+            var roots = Directory.Exists(AbsRepoPath(InMobiDir))
+                ? new[] { DevRoot, InMobiDir }
+                : new[] { DevRoot };
+            if (roots.Length == 1)
+                Debug.LogWarning($"[Autech] {InMobiDir} not found — exporting WITHOUT the InMobi CMP consent plugin.");
+
+            AssetDatabase.ExportPackage(roots, outPath, ExportPackageOptions.Recurse);
+            Debug.Log($"[Autech] Exported v{version} ({roots.Length} root(s)) -> {outPath}");
             EditorUtility.RevealInFinder(outPath);
         }
 
@@ -58,7 +68,21 @@ namespace Autech.LevelPlay.DevTools
             DeleteRepoFile("Runtime/Scripts/AdsExampleUI.cs");
             DeleteRepoFile("Runtime/Scripts/AdsExampleUI.cs.meta");
 
-            Debug.Log("[Autech] Synced Assets/AutechLevelPlay -> root package (Runtime/, Editor/). " +
+            // InMobi CMP (Choice) ships as the "InMobi CMP" sample. Mirror the
+            // editable copy (Assets/InMobi/Choice) into Samples~/InMobiCMP/Choice
+            // so git-URL installs carry it (the package prompts to import it).
+            if (Directory.Exists(AbsRepoPath($"{InMobiDir}/Choice")))
+            {
+                CopyTree($"{InMobiDir}/Choice", "Samples~/InMobiCMP/Choice");
+                CopyInto($"{InMobiDir}/Choice.meta", "Samples~/InMobiCMP/Choice.meta");
+            }
+            else
+            {
+                Debug.LogWarning($"[Autech] {InMobiDir}/Choice not found — Samples~/InMobiCMP not refreshed.");
+            }
+
+            Debug.Log("[Autech] Synced Assets/AutechLevelPlay -> root package (Runtime/, Editor/) " +
+                      "and Assets/InMobi -> Samples~/InMobiCMP. " +
                       "Review the example scene under Samples~ manually if it changed.");
         }
 

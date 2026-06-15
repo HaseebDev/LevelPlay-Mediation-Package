@@ -6,7 +6,9 @@ This repo mirrors the **Autech AdMob** package layout.
 repo root/
 ├── package.json, README.md, CHANGELOG.md, LICENSE.md, INSTALL.md
 ├── Runtime/  Editor/  Samples~/      ← the DISTRIBUTED UPM package (git URL / OpenUPM)
+│     Samples~/InMobiCMP/             ← bundled InMobi CMP (Choice) v2.0.1, the consent dep
 ├── Assets/AutechLevelPlay/                 ← the EDITABLE / TESTABLE working copy (source of truth)
+├── Assets/InMobi/                          ← editable InMobi CMP copy (mirrored → Samples~/InMobiCMP)
 ├── Assets/Editor/AutechPackageExporter.cs   ← dev-only release tooling
 ├── Packages/ ProjectSettings/        ← the Unity dev project (so the repo opens)
 └── .npmignore .gitattributes .gitignore
@@ -28,7 +30,8 @@ GitHub Release.
 
 1. **Edit & test** in `Assets/AutechLevelPlay` (open the repo root in Unity 6000.x).
 2. **Sync** the dev copy into the root package mirror:
-   Unity menu **Tools ▸ Autech ▸ Sync dev copy → root package**.
+   Unity menu **Tools ▸ Autech ▸ Sync dev copy → root package**. This also
+   mirrors `Assets/InMobi/Choice` → `Samples~/InMobiCMP/Choice`.
    (If you changed the example scene, copy it into `Samples~/ExampleScene/` too.)
 3. **Bump the version** in `package.json` and update `CHANGELOG.md`.
 4. **Export** the importable artifact:

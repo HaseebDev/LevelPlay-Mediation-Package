@@ -117,7 +117,7 @@ namespace Autech.LevelPlay
 
             try
             {
-                SetCmpLogLevel(config.EnableTestSuite);
+                SetCmpLogLevel(config.IsTestModeActive);
                 StartChoice(config.CmpPCode, config.CmpShowIdfaPopup);
                 await WaitForTcfDataAsync();
                 OnConsentChanged?.Invoke(HasConsentForPurpose(PersonalizationPurposeId));

@@ -4,5 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/AutechLevelPlay/Scene/ExampleLevelPlayScene.unity
+    guid: b44c4ca1124bb7c489bbcc79e8cb4832
   m_configObjects: {}

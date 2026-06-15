@@ -18,6 +18,8 @@ public class AdsExampleUI : MonoBehaviour
     public Button toggleBannerBtn;
     public Button toggleRemoveAdsBtn;
     public Button privacyOptionsBtn;
+    [Tooltip("Opens the LevelPlay integration test suite. Auto-hidden when test mode is OFF (production builds).")]
+    public Button launchTestSuiteBtn;
 
     [Header("Debug Logging")]
     public Text debugLogText;
@@ -34,6 +36,20 @@ public class AdsExampleUI : MonoBehaviour
         if (toggleBannerBtn != null) toggleBannerBtn.onClick.AddListener(ToggleBanner);
         if (toggleRemoveAdsBtn != null) toggleRemoveAdsBtn.onClick.AddListener(ToggleRemoveAds);
         if (privacyOptionsBtn != null) privacyOptionsBtn.onClick.AddListener(ShowPrivacyOptions);
+
+        if (launchTestSuiteBtn != null)
+        {
+            launchTestSuiteBtn.onClick.AddListener(LaunchTestSuite);
+            // Only meaningful in test mode; hide it in production builds.
+            launchTestSuiteBtn.gameObject.SetActive(AdsManager.Instance.IsTestMode);
+        }
+
+        if (AdsManager.Instance.IsTestMode)
+        {
+            LogTest("TEST MODE ON (dev build / editor) — ads run as test ads. " +
+                    "Register this device as a LevelPlay test device (advertising ID is in the console) so the " +
+                    "buttons below show test ads too. Call AdsManager.Instance.LaunchTestSuite() to open the test suite.");
+        }
 
         InvokeRepeating(nameof(UpdateButtonStates), 0f, 1f);
     }
@@ -102,6 +118,12 @@ public class AdsExampleUI : MonoBehaviour
     {
         LogTest("Opening privacy options...");
         AdsManager.Instance.ShowPrivacyOptionsForm();
+    }
+
+    public void LaunchTestSuite()
+    {
+        LogTest("Launching integration test suite...");
+        AdsManager.Instance.LaunchTestSuite();
     }
 
     public void ClearLog()

@@ -15,8 +15,8 @@ namespace Autech.LevelPlay
     {
         public bool AdsEnabled;
         public bool RemoveAds;
-        public bool EnableTestSuite;
-        public bool EnableAdsOnIosAppOnMac;
+        public AdTestMode TestMode;
+        public bool AutoLaunchTestSuite;
         public bool UseAdaptiveBanners;
         public BannerSize PreferredBannerSize;
         public BannerPosition BannerPosition;
@@ -99,6 +99,9 @@ namespace Autech.LevelPlay
         public bool IsInitialized => isInitialized;
         public bool IsShowingAd => isShowingAd;
 
+        /// <summary>True when ads run in test mode for this build (Development build / Editor under Auto, or forced On).</summary>
+        public bool IsTestMode => config.IsTestModeActive;
+
         /// <summary>Consent component for advanced queries (consent type, CCPA toggle).</summary>
         public ConsentManager Consent => consentManager;
 
@@ -131,8 +134,8 @@ namespace Autech.LevelPlay
         {
             config.AdsEnabled = settings.AdsEnabled;
             config.RemoveAds = settings.RemoveAds;
-            config.EnableTestSuite = settings.EnableTestSuite;
-            config.EnableAdsOnIosAppOnMac = settings.EnableAdsOnIosAppOnMac;
+            config.TestMode = settings.TestMode;
+            config.AutoLaunchTestSuite = settings.AutoLaunchTestSuite;
             config.UseAdaptiveBanners = settings.UseAdaptiveBanners;
             config.PreferredBannerSize = settings.PreferredBannerSize;
             config.BannerPosition = settings.BannerPosition;
@@ -183,11 +186,11 @@ namespace Autech.LevelPlay
 
 #if UNITY_IOS && !UNITY_EDITOR
                 // The old AdMob/UMP build crashed at launch on Apple silicon
-                // Macs; LevelPlay is likewise unsupported there. Run the game
-                // ad-free on Mac unless explicitly enabled.
-                if (UnityEngine.iOS.Device.iosAppOnMac && !config.EnableAdsOnIosAppOnMac)
+                // Macs; LevelPlay is likewise unsupported there. An iOS build
+                // running as an "iPad app on Mac" always runs ad-free.
+                if (UnityEngine.iOS.Device.iosAppOnMac)
                 {
-                    Debug.Log("[Autech.LevelPlay] iOS app running on Mac — ads disabled (EnableAdsOnIosAppOnMac is off).");
+                    Debug.Log("[Autech.LevelPlay] iOS app running on Mac — ads disabled (LevelPlay supports iOS/Android only).");
                     return;
                 }
 #endif
@@ -218,10 +221,15 @@ namespace Autech.LevelPlay
                     return;
                 }
 
-                // 3. Test suite metadata must be set before Init.
-                if (config.EnableTestSuite)
+                // 3. Test mode (auto-on in Development builds) must be flagged
+                //    before Init: this enables the integration test suite. Test
+                //    ads at your real trigger points additionally require this
+                //    device to be registered as a test device — the advertising
+                //    ID for that is logged below after a successful init.
+                if (config.IsTestModeActive)
                 {
                     LevelPlaySdk.SetMetaData("is_test_suite", "enable");
+                    LogTestModeBanner();
                 }
 
                 // 4. Initialize the SDK and await the result event.
@@ -257,9 +265,19 @@ namespace Autech.LevelPlay
                 isInitialized = true;
                 Debug.Log("[Autech.LevelPlay] Initialized.");
 
-                if (config.EnableTestSuite)
+                if (config.IsTestModeActive)
                 {
-                    LevelPlaySdk.LaunchTestSuite();
+                    LogTestDeviceAdvertisingId();
+
+                    if (config.AutoLaunchTestSuite)
+                    {
+                        LaunchTestSuite();
+                    }
+                    else
+                    {
+                        Debug.Log("[Autech.LevelPlay] Test mode ACTIVE — integration test suite is enabled but not auto-launched. " +
+                                  "Call AdsManager.Instance.LaunchTestSuite() (or the VerifyLevelPlay 'Launch Test Suite' context menu) to open it.");
+                    }
                 }
             }
             finally
@@ -458,6 +476,80 @@ namespace Autech.LevelPlay
         {
             config.CcpaOptOut = optedOut;
             LevelPlayPrivacySettings.SetCCPA(optedOut);
+        }
+
+        #endregion
+
+        #region Test Mode
+
+        /// <summary>
+        /// Launch the LevelPlay integration test suite (the in-app panel that
+        /// verifies each network and loads/shows test ads on demand). No-op when
+        /// test mode is OFF — the required <c>is_test_suite</c> metadata is only
+        /// set before init while test mode is active.
+        /// </summary>
+        public void LaunchTestSuite()
+        {
+            if (!config.IsTestModeActive)
+            {
+                Debug.LogWarning("[Autech.LevelPlay] LaunchTestSuite ignored — test mode is OFF. " +
+                                 "Set TestMode to AlwaysOn (or make a Development Build) so the test-suite metadata is enabled before init.");
+                return;
+            }
+
+            Debug.Log("[Autech.LevelPlay] Launching LevelPlay integration test suite.");
+            LevelPlaySdk.LaunchTestSuite();
+        }
+
+        // Loud, hard-to-miss console banner explaining why ads are in test mode
+        // and how to get test ads at the game's own trigger points.
+        private void LogTestModeBanner()
+        {
+            string reason = Debug.isDebugBuild ? "Development build / Editor" : "forced (TestMode = AlwaysOn)";
+            Debug.Log(
+                "\n========================= AUTECH LEVELPLAY: TEST MODE ACTIVE =========================\n" +
+                $"Reason: {reason}. Integration test suite ENABLED. DO NOT ship a build in this state.\n" +
+                "To get TEST ads at your real in-game trigger points (banner/interstitial/rewarded Show calls),\n" +
+                "register THIS device as a test device in the LevelPlay dashboard:\n" +
+                "  Dashboard > SDK Networks / Settings > Test Devices  →  add the advertising ID logged below.\n" +
+                "LevelPlay has no separate 'test ad unit ids'; test-device registration is what makes your\n" +
+                "production ad units serve safe test ads everywhere (including the sample scene).\n" +
+                "=====================================================================================");
+        }
+
+        // Best-effort log of the device advertising ID (GAID/IDFA) so it can be
+        // pasted into the dashboard test-device list. Falls back to pointing at
+        // the test suite, whose header also shows the advertising ID.
+        private void LogTestDeviceAdvertisingId()
+        {
+            try
+            {
+                bool requested = Application.RequestAdvertisingIdentifierAsync(
+                    (string advertisingId, bool trackingEnabled, string error) =>
+                    {
+                        if (!string.IsNullOrEmpty(advertisingId))
+                        {
+                            Debug.Log($"[Autech.LevelPlay] *** TEST DEVICE ADVERTISING ID: {advertisingId} *** " +
+                                      $"(tracking enabled: {trackingEnabled}). Add it to the LevelPlay dashboard test-device list.");
+                        }
+                        else
+                        {
+                            Debug.Log($"[Autech.LevelPlay] Advertising ID unavailable ({error}). " +
+                                      "Launch the test suite — its header shows the advertising ID to register as a test device.");
+                        }
+                    });
+
+                if (!requested)
+                {
+                    Debug.Log("[Autech.LevelPlay] Advertising ID lookup not supported on this platform/Editor. " +
+                              "Launch the test suite (its header shows the advertising ID) to register this device.");
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.Log($"[Autech.LevelPlay] Advertising ID lookup failed ({e.Message}). " +
+                          "Launch the test suite to read the advertising ID and register this device.");
+            }
         }
 
         #endregion

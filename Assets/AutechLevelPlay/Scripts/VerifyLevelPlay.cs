@@ -39,12 +39,13 @@ namespace Autech.LevelPlay
         [SerializeField] private bool removeAds = false;
 
         [Header("Testing")]
-        [Tooltip("Launches the LevelPlay integration test suite after init. NEVER ship enabled.")]
-        [SerializeField] private bool enableTestSuite = false;
-
-        [Header("Mac (iOS app on Apple silicon)")]
-        [Tooltip("LevelPlay officially supports iOS/Android only. Leave OFF to run the game ad-free on Macs.")]
-        [SerializeField] private bool enableAdsOnIosAppOnMac = false;
+        [Tooltip("Global ad test mode. Auto = test mode ON in Development builds and the Editor, OFF in production builds (iOS & Android). " +
+                 "While active the integration test suite is enabled and the device's advertising ID is logged so you can register it as a " +
+                 "LevelPlay test device — that's what makes your real in-game ad trigger points serve safe TEST ads.")]
+        [SerializeField] private AdTestMode testMode = AdTestMode.AutoDetectDevelopmentBuild;
+        [Tooltip("When test mode is active, auto-launch the test suite panel right after init. Leave OFF to keep the game's own ad flows " +
+                 "testable; launch the suite on demand via LaunchTestSuite() or the 'Launch Test Suite' context menu.")]
+        [SerializeField] private bool autoLaunchTestSuite = false;
 
         [Header("Consent & Privacy (InMobi CMP)")]
         [Tooltip("Run the InMobi CMP consent flow on first launch (GDPR / IAB TCF).")]
@@ -88,8 +89,8 @@ namespace Autech.LevelPlay
             {
                 AdsEnabled = adsEnabled,
                 RemoveAds = removeAds,
-                EnableTestSuite = enableTestSuite,
-                EnableAdsOnIosAppOnMac = enableAdsOnIosAppOnMac,
+                TestMode = testMode,
+                AutoLaunchTestSuite = autoLaunchTestSuite,
                 UseAdaptiveBanners = useAdaptiveBanners,
                 PreferredBannerSize = preferredBannerSize,
                 BannerPosition = bannerPosition,
@@ -165,6 +166,9 @@ namespace Autech.LevelPlay
 
         [ContextMenu("Show Privacy Options")]
         public void TestShowPrivacyOptions() => ShowPrivacyOptionsForm();
+
+        [ContextMenu("Launch Test Suite")]
+        public void TestLaunchTestSuite() => AdsManager.Instance.LaunchTestSuite();
 
         [ContextMenu("Reset Stored Consent (Testing)")]
         public void TestResetConsent() => AdsManager.Instance.Consent.ResetConsentForTesting();

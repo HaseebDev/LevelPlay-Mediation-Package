@@ -30,6 +30,23 @@ namespace Autech.LevelPlay
     }
 
     /// <summary>
+    /// Global test-mode policy. Controls whether the SDK runs in test mode —
+    /// integration test suite enabled and the device's advertising ID logged so
+    /// it can be registered as a LevelPlay test device (the only way LevelPlay
+    /// serves TEST ads at your real in-game trigger points, since LevelPlay has
+    /// no separate "test ad unit ids").
+    /// </summary>
+    public enum AdTestMode
+    {
+        /// <summary>Test mode ON in Development builds and the Editor, OFF in production. (Recommended.)</summary>
+        AutoDetectDevelopmentBuild = 0,
+        /// <summary>Force test mode ON regardless of build type. NEVER ship.</summary>
+        AlwaysOn = 1,
+        /// <summary>Force test mode OFF even in Development builds (serve production ads).</summary>
+        AlwaysOff = 2
+    }
+
+    /// <summary>
     /// Runtime ad configuration: LevelPlay app keys, ad unit ids, banner and
     /// consent settings. Owned by <see cref="AdsManager"/>; populated via
     /// <see cref="AdsManager.ApplyConfiguration"/>.
@@ -55,12 +72,33 @@ namespace Autech.LevelPlay
         public bool AdsEnabled { get; set; } = true;
 
         public bool RemoveAds { get; set; } = false;
-        public bool EnableTestSuite { get; set; } = false;
 
-        // LevelPlay officially supports iOS/Android only. When the iOS build
-        // runs as an "iPad app on Apple silicon Mac", ads are skipped unless
-        // this is explicitly enabled (the game then runs ad-free on Mac).
-        public bool EnableAdsOnIosAppOnMac { get; set; } = false;
+        // Test mode. Auto = ON in Development builds (and the Editor), OFF in
+        // production. When active, the integration test suite is enabled and the
+        // device's advertising ID is logged for test-device registration.
+        public AdTestMode TestMode { get; set; } = AdTestMode.AutoDetectDevelopmentBuild;
+
+        // When test mode is active, also auto-launch the integration test suite
+        // panel right after init. Leave OFF to keep the game's own ad trigger
+        // points usable; launch the suite on demand instead.
+        public bool AutoLaunchTestSuite { get; set; } = false;
+
+        /// <summary>
+        /// True when ads should run in test mode for the current build:
+        /// Development builds / Editor under Auto, or whenever forced On.
+        /// </summary>
+        public bool IsTestModeActive
+        {
+            get
+            {
+                switch (TestMode)
+                {
+                    case AdTestMode.AlwaysOn: return true;
+                    case AdTestMode.AlwaysOff: return false;
+                    default: return Debug.isDebugBuild;
+                }
+            }
+        }
 
         // Banner settings
         public bool UseAdaptiveBanners { get; set; } = true;
@@ -146,7 +184,7 @@ namespace Autech.LevelPlay
         {
             Debug.Log($"[Autech.LevelPlay] AppKey={Truncate(AppKey)} banner={Truncate(BannerAdUnitId)} " +
                       $"interstitial={Truncate(InterstitialAdUnitId)} rewarded={Truncate(RewardedAdUnitId)} " +
-                      $"removeAds={RemoveAds} testSuite={EnableTestSuite} adaptive={UseAdaptiveBanners} " +
+                      $"removeAds={RemoveAds} testMode={TestMode}(active={IsTestModeActive}) adaptive={UseAdaptiveBanners} " +
                       $"position={BannerPosition} ccpaOptOut={CcpaOptOut} coppa={TagForChildDirectedTreatment}");
         }
 

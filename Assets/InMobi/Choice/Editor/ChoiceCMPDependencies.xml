@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  InMobi CMP (Choice) Android dependencies.
+
+  The bundled InMobi-CMP .aar does not declare its transitive Android
+  dependencies, so they must be declared here for the External Dependency
+  Manager (EDM4U, shipped with the LevelPlay SDK) to fetch them into the
+  Gradle build. Two are required (the same set InMobi's official plugin ships):
+
+    1. Material Components — the Choice consent UI is a Material
+       BottomSheetDialog (style/Theme.Design.BottomSheetDialog). Without it the
+       build fails at resource linking:
+           AAPT: error: resource style/Theme.Design.BottomSheetDialog not found.
+
+    2. Gson — the InMobi Unity plugin parses style/config JSON via
+       com.google.gson.Gson at runtime. Without it the app CRASHES on the first
+       consent call when the scene loads:
+           java.lang.NoClassDefFoundError: Lcom/google/gson/Gson;
+       (newtonsoft-json is the C# JSON lib and does NOT satisfy this Java need.)
+
+  After changing this file run: Assets > External Dependency Manager >
+  Android Resolver > Force Resolve.
+-->
+<dependencies>
+  <androidPackages>
+    <androidPackage spec="com.google.android.material:material:1.12.0" />
+    <androidPackage spec="com.google.code.gson:gson:2.10.1" />
+  </androidPackages>
+</dependencies>

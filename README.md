@@ -8,9 +8,10 @@ namespace swap (`Autech.Admob` → `Autech.LevelPlay`) plus new dashboard ids.
 
 - **Ads**: rewarded / interstitial / banner via LevelPlay mediation (`com.unity.services.levelplay` 8+,
   built against 9.4.1). Load retry with backoff, auto-reload after close, single-show lock.
-- **Consent (GDPR)**: built-in first-launch consent dialog (dependency-free uGUI). Choice is
-  persisted and applied each session via `LevelPlayPrivacySettings.SetGDPRConsents` —
-  full network map every call (the API replaces, never merges).
+- **Consent (GDPR)**: real **InMobi CMP (Choice)** — Google-certified IAB TCF v2.2, the
+  LevelPlay counterpart to AdMob's Google UMP. The plugin (v2.0.1) is **bundled** and the
+  package prompts to import it on first load; consent (`IABTCF_*`) is written to native
+  storage and consumed by the LevelPlay adapters automatically. See [INSTALL.md](INSTALL.md).
 - **CCPA / US states**: `AdsManager.Instance.SetCcpaOptOut(bool)` — wire to a
   "Do Not Sell or Share My Personal Information" settings toggle.
 - **COPPA**: `tagForChildDirectedTreatment` flag (leave OFF for general-audience games),
@@ -70,9 +71,35 @@ AdsManager.Instance.ShowPrivacyOptionsForm();
 
 ## Testing
 
-- Enable **Test Suite** on `VerifyLevelPlay` to launch LevelPlay's integration test suite
-  after init (SDK 7.3+, portrait). Never ship with it enabled.
-- Register test devices in the LevelPlay dashboard (Settings → Test devices, GAID/IDFA).
+The package has one **global test switch** — the **Test Mode** field on `VerifyLevelPlay`
+(iOS & Android):
+
+- **Auto** (default) — test mode is **ON in Development builds and the Editor**, and
+  **OFF in production builds**. Tie test ads to Unity's *Development Build* checkbox and you
+  never have to remember to flip anything before shipping.
+- **Always On** / **Always Off** — force it either way (never ship *Always On*).
+
+When test mode is active, on init the package:
+
+1. Enables LevelPlay's **integration test suite** (`is_test_suite` metadata).
+2. Logs the device's **advertising ID** (GAID / IDFA) to the console.
+3. Does **not** auto-pop the suite (so the sample scene / your own ad buttons stay usable).
+   Open it on demand with `AdsManager.Instance.LaunchTestSuite()`, or the `VerifyLevelPlay`
+   **Launch Test Suite** context-menu item. Set **Auto Launch Test Suite** to pop it on init.
+
+### Getting test ads at your real in-game trigger points
+
+LevelPlay has **no separate "test ad unit ids"** — you always use your real units. The
+integration test suite is a *separate diagnostic panel*; it does **not** make your own
+`ShowInterstitial` / `ShowRewarded` / `ShowBanner` calls serve test ads. To get test ads at
+your real trigger points (and in the sample scene), register the device once:
+
+1. Run a Development build (or Editor) — test mode is on; copy the **advertising ID** from
+   the console (or read it from the test suite header).
+2. LevelPlay dashboard → **Settings → Test devices** → add that GAID/IDFA.
+3. Re-run. Every banner/interstitial/rewarded `Show` call now serves **test ads** on that
+   device, on your production units — globally, no code changes per trigger point.
+
 - **Never click real ads in production builds** — Unity's Invalid Activity Policy treats
   self-clicks and accidental-click placements as violations, with payment clawback.
 

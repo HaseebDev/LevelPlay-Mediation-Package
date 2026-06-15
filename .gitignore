@@ -23,6 +23,7 @@
 .bezisidekick/
 *.csproj
 *.sln
+*.slnx
 *.suo
 *.user
 .DS_Store
@@ -59,6 +60,7 @@ Assets/PlayServicesResolver.meta
 Assets/LevelPlay/
 Assets/LevelPlay.meta
 
-# InMobi CMP (Choice) plugin — third-party SDK, imported separately (see INSTALL.md)
-Assets/InMobi/
-Assets/InMobi.meta
+# InMobi CMP (Choice) plugin — bundled with this package (v2.0.1). It is the
+# GDPR/IAB-TCF consent dependency; the editable copy in Assets/InMobi is TRACKED
+# and mirrored into Samples~/InMobiCMP at release time (see RELEASING.md). The
+# package detects it on load and offers to import it if missing.
