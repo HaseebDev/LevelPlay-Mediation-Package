@@ -28,8 +28,16 @@
   Kotlin stdlib + coroutines (also used by the SDK) are already provided by the
   LevelPlay/ironSource Kotlin SDK, so they are intentionally not declared here.
 
+  iOS: the Obj-C binding in Plugins/iOS imports <InMobiCMP/InMobiCMP-Swift.h>,
+  but the native framework is not vendored anywhere in the package. The InMobiCMP
+  CocoaPod provides it, and EDM4U (shipped with LevelPlay) resolves iOS pods, so we
+  declare it here to match the rest of the dependency setup. The version is pinned
+  to 2.4.2 to match the bundled Android native (InMobi-CMP-2.4.2.aar) so both
+  platforms run the same CMP SDK generation. Missing → iOS build fails with
+  "'InMobiCMP/InMobiCMP-Swift.h' file not found".
+
   After changing this file run: Assets > External Dependency Manager >
-  Android Resolver > Force Resolve.
+  Android Resolver > Force Resolve  (and iOS Resolver > Force Resolve on a Mac).
 -->
 <dependencies>
   <androidPackages>
@@ -38,4 +46,7 @@
     <androidPackage spec="androidx.preference:preference:1.2.1" />
     <androidPackage spec="androidx.constraintlayout:constraintlayout:2.1.4" />
   </androidPackages>
+  <iosPods>
+    <iosPod name="InMobiCMP" version="2.4.2" />
+  </iosPods>
 </dependencies>

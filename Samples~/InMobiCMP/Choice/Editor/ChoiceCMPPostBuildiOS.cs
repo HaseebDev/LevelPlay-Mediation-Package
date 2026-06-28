@@ -20,22 +20,12 @@ namespace ChoiceCMPInternal.Editor.Postbuild
 
             PrepareProject(buildPath);
 
-            // Make sure that the proper location usage string is in Info.plist
-
-            const string locationKey = "NSLocationWhenInUseUsageDescription";
-            const string DefaultLocationAwarenessUsage = "Your location is used to provide better advertising experience.";
-
-            var plistPath = Path.Combine(buildPath, "Info.plist");
-            var plist = new PlistDocument();
-            plist.ReadFromFile(plistPath);
-            PlistElement element = plist.root[locationKey];
-            // Add or overwrite the key in the info.plist file if necessary.
-            // (Note:  does not overwrite if the string has been manually changed in the Xcode project and our string is just the default.)
-            if (element == null)
-            {
-                plist.root.SetString(locationKey, DefaultLocationAwarenessUsage);
-                plist.WriteToFile(plistPath);
-            }
+            // NOTE: We intentionally do NOT inject NSLocationWhenInUseUsageDescription.
+            // InMobi's iOS CMP does not require a location usage string (only
+            // NSUserTrackingUsageDescription, handled by AttInfoPlistPostprocessor when
+            // ATT is enabled). Shipping a location key forces a location entry into App
+            // Privacy and invites App Review questions for an app that never requests
+            // location. If a publisher genuinely needs location, they add the key in Xcode.
         }
 
         private static void PrepareProject(string buildPath)

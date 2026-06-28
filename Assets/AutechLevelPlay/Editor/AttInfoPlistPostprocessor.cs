@@ -14,7 +14,9 @@ namespace Autech.LevelPlay.EditorTools
     /// trips Apple's plist/App-Privacy cross-check ("app contains
     /// NSUserTrackingUsageDescription ... update your App Privacy response")
     /// and blocks review submission. SKAdNetwork ids are NOT handled here:
-    /// LevelPlay 9.1.0+ manages them automatically.
+    /// LevelPlay 8.8.0+ writes SKAdNetworkItems to Info.plist, but only when the
+    /// publisher enables the "SKAdNetwork IDs" feature in the LevelPlay Network
+    /// Manager — it is opt-in, not automatic. See INSTALL.md for the publisher step.
     /// </summary>
     public static class AttInfoPlistPostprocessor
     {
