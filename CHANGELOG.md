@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-06-28
+
+### Fixed
+- **InMobi CMP iOS build failure — missing native SDK.** The iOS binding
+  (`Plugins/iOS/ChoiceCMPManager.mm`) imports `<InMobiCMP/InMobiCMP-Swift.h>`, but
+  nothing provided the native framework: no `.xcframework`, no Podfile entry, and
+  `ChoiceCMPDependencies.xml` declared only `androidPackages`. An iOS build failed
+  with `'InMobiCMP/InMobiCMP-Swift.h' file not found`. Added an `<iosPods>` block
+  declaring the **`InMobiCMP`** CocoaPod (pinned to **2.4.2**, matching the bundled
+  Android native `InMobi-CMP-2.4.2.aar` so both platforms run the same CMP SDK).
+  EDM4U's iOS Resolver now writes `pod 'InMobiCMP'` into the generated Xcode
+  project and runs `pod install`. Verified end-to-end on macOS: Podfile generated,
+  `InMobiCMP.xcframework` resolved, and the Obj-C binding compiles/links unsigned.
+
+### Removed
+- **Stray iOS location usage string.** `ChoiceCMPPostBuildiOS` no longer injects
+  `NSLocationWhenInUseUsageDescription` into Info.plist. InMobi's iOS CMP does not
+  require a location string (only `NSUserTrackingUsageDescription`, for IDFA),
+  and shipping it forced a location entry into App Privacy and invited App Review
+  questions for an app that never requests location.
+
+### Changed
+- **SKAdNetwork documentation corrected.** `AttInfoPlistPostprocessor` previously
+  claimed "LevelPlay 9.1.0+ manages SKAdNetwork ids automatically." That is wrong:
+  LevelPlay 8.8.0+ writes `SKAdNetworkItems` only when the publisher enables the
+  **SKAdNetwork IDs** feature in the **LevelPlay Network Manager** (opt-in).
+  Corrected the code comment and documented the publisher step in README/INSTALL.
+
 ## [1.1.0] - 2026-06-15
 
 ### Added

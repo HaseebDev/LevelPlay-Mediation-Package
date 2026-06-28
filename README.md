@@ -18,7 +18,10 @@ namespace swap (`Autech.Admob` → `Autech.LevelPlay`) plus new dashboard ids.
   applied via `LevelPlayPrivacySettings.SetCOPPA` before init.
 - **iOS ATT**: shows the App Tracking Transparency prompt BEFORE LevelPlay init (Apple/Unity
   requirement) and injects `NSUserTrackingUsageDescription` into Info.plist at build time.
-- **SKAdNetwork**: nothing to do — LevelPlay 9.1.0+ manages SKAN ids automatically.
+- **SKAdNetwork**: LevelPlay 8.8.0+ writes `SKAdNetworkItems` into Info.plist at build
+  time, but only when you enable the **SKAdNetwork IDs** feature in the **LevelPlay
+  Network Manager** (it is opt-in, not automatic). Enable it there so iOS attribution
+  works; nothing else is needed in this package.
 - **Remove Ads**: AES-256 encrypted persistence (ported unchanged from the AdMob package).
   Banner + interstitial are suppressed; rewarded stays available.
 

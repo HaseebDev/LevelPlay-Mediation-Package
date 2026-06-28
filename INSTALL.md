@@ -13,7 +13,7 @@ https://github.com/HaseebDev/LevelPlay-Mediation-Package.git
 To pin a specific release, append a tag:
 
 ```
-https://github.com/HaseebDev/LevelPlay-Mediation-Package.git#v1.1.0
+https://github.com/HaseebDev/LevelPlay-Mediation-Package.git#v1.1.1
 ```
 
 …or add it directly to `Packages/manifest.json`:
@@ -21,7 +21,7 @@ https://github.com/HaseebDev/LevelPlay-Mediation-Package.git#v1.1.0
 ```json
 {
   "dependencies": {
-    "com.autech.levelplay-mediation": "https://github.com/HaseebDev/LevelPlay-Mediation-Package.git#v1.1.0"
+    "com.autech.levelplay-mediation": "https://github.com/HaseebDev/LevelPlay-Mediation-Package.git#v1.1.1"
   }
 }
 ```
@@ -66,7 +66,14 @@ download it separately.
      SDK — **Material Components**, **Gson**, **androidx.preference**, and
      **androidx.constraintlayout** (the libraries the Choice SDK actually uses).
      A resolve runs automatically right after the InMobi CMP import.
-   - **iOS**: the CMP framework via the bundled post-build processor.
+   - **iOS**: the same `ChoiceCMPDependencies.xml` declares the **`InMobiCMP`
+     CocoaPod** (pinned to the version of the bundled Android native, so both
+     platforms run the same CMP SDK), resolved by EDM4U's **iOS Resolver** — it
+     writes `pod 'InMobiCMP'` into the generated Xcode project's Podfile and runs
+     `pod install`. The bundled post-build processor then sets the Swift/`-ObjC`
+     linker flags. CocoaPods must be installed on the build Mac (`pod --version`).
+     If the iOS build can't find `InMobiCMP/InMobiCMP-Swift.h`, run
+     **Assets → External Dependency Manager → iOS Resolver → Force Resolve**.
 
    See the [InMobi CMP Unity docs](https://support.inmobi.com/choice/other-resources/unity-app-implementation-sdk/).
 
