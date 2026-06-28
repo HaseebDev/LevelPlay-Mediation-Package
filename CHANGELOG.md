@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-06-28
+
+### Fixed
+- **UPM import warnings** ("…has no meta file, but it's in an immutable folder.
+  The asset will be ignored") when installing via git URL. Added the missing
+  `.meta` files for `INSTALL.md` and `RELEASING.md`, and removed the temporary
+  `IOS-HANDOFF.md` dev doc from the package. No code changes.
+
 ## [1.1.1] - 2026-06-28
 
 ### Added

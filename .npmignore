@@ -34,6 +34,7 @@ dist/
 .vscode/
 .idea/
 RELEASING.md
+RELEASING.md.meta
 
 # Keep ONLY the package structure
 !package.json
