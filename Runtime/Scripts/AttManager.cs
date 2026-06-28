@@ -20,12 +20,15 @@ namespace Autech.LevelPlay
     }
 
     /// <summary>
-    /// Handles the iOS App Tracking Transparency (ATT) prompt. Apple and Unity
-    /// both require the prompt to be presented by the app (not the SDK) BEFORE
-    /// initializing any SDK that may access the IDFA, so <see cref="AdsManager"/>
-    /// awaits <see cref="RequestAuthorizationAsync"/> before LevelPlay init.
-    /// The NSUserTrackingUsageDescription Info.plist entry is injected at build
-    /// time by the package's iOS post-processor.
+    /// iOS App Tracking Transparency (ATT) helper. As of the InMobi-CMP-owns-ATT
+    /// change, the ATT prompt is triggered by the InMobi CMP (shouldDisplayIDFA)
+    /// during the consent flow, so this class is primarily a read-only status
+    /// source (<see cref="Status"/>/<see cref="IsAuthorized"/>) used by the debug
+    /// panel. <see cref="RequestAuthorizationAsync"/> remains available as an
+    /// opt-in app-controlled prompt (VerifyLevelPlay → requestAttAuthorization),
+    /// which <see cref="AdsManager"/> awaits before init only when that toggle is on.
+    /// Either way the NSUserTrackingUsageDescription Info.plist entry is injected at
+    /// build time by the package's iOS post-processor.
     /// </summary>
     public static class AttManager
     {

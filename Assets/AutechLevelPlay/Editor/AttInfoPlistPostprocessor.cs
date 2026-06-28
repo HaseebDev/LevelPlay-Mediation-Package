@@ -59,8 +59,9 @@ namespace Autech.LevelPlay.EditorTools
         }
 
         /// <summary>
-        /// True when any VerifyLevelPlay prefab in the project has both the ads
-        /// master switch and ATT authorization enabled.
+        /// True when any VerifyLevelPlay prefab has ads enabled AND an ATT prompt
+        /// will be shown — either app-side (requestAttAuthorization) or by the
+        /// InMobi CMP (cmpShowIdfaPopup, the default). Both need the usage string.
         /// </summary>
         private static bool ShouldInjectAttDescription()
         {
@@ -76,8 +77,16 @@ namespace Autech.LevelPlay.EditorTools
                 var serialized = new SerializedObject(bootstrap);
                 var adsEnabled = serialized.FindProperty("adsEnabled");
                 var requestAtt = serialized.FindProperty("requestAttAuthorization");
-                if (adsEnabled != null && adsEnabled.boolValue &&
-                    requestAtt != null && requestAtt.boolValue)
+                var cmpIdfa = serialized.FindProperty("cmpShowIdfaPopup");
+
+                // The ATT prompt may be presented either by the app (AttManager,
+                // requestAttAuthorization) OR by the InMobi CMP (cmpShowIdfaPopup,
+                // the package default). Either path REQUIRES the usage string in
+                // Info.plist — without it the ATT prompt crashes at runtime.
+                bool ads = adsEnabled != null && adsEnabled.boolValue;
+                bool attByApp = requestAtt != null && requestAtt.boolValue;
+                bool attByCmp = cmpIdfa != null && cmpIdfa.boolValue;
+                if (ads && (attByApp || attByCmp))
                 {
                     return true;
                 }

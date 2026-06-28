@@ -4,6 +4,24 @@
 
 ## [1.1.1] - 2026-06-28
 
+### Added
+- **Debug panel privacy/consent snapshot.** The demo scene's on-screen debug log now
+  dumps a full snapshot once the SDK is up (and again after the privacy form): ATT
+  trigger + status, CCPA/COPPA flags, and the IAB-TCF values the CMP wrote to native
+  storage (gdprApplies, consent type, Purpose 1/3, PurposeConsents, VendorConsents,
+  TC string, US-Privacy/GPP), plus the device advertising ID (IDFA/GAID). Lets you
+  verify on device that consent + ATT were actually grabbed. New public
+  `AdsManager.GetPrivacyDebugSnapshot()` / `RequestAdvertisingId()`.
+
+### Changed
+- **ATT is now owned by the InMobi CMP (single source of truth).** `cmpShowIdfaPopup`
+  defaults ON and the app-side `AttManager` prompt (`requestAttAuthorization`) defaults
+  OFF, so the ATT "Allow tracking" popup is presented by the CMP as part of its consent
+  flow instead of by a separate app-side step. `AttManager` remains as a read-only ATT
+  status source (and an opt-in fallback). `AttInfoPlistPostprocessor` now injects
+  `NSUserTrackingUsageDescription` whenever **either** ATT path is enabled, so the CMP's
+  prompt always has its required usage string.
+
 ### Fixed
 - **InMobi CMP iOS build failure — missing native SDK.** The iOS binding
   (`Plugins/iOS/ChoiceCMPManager.mm`) imports `<InMobiCMP/InMobiCMP-Swift.h>`, but

@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -79,6 +80,36 @@ namespace Autech.LevelPlay
 
         /// <summary>True when the CMP determined GDPR applies to this user (region-based).</summary>
         public bool GdprApplies() => ReadNative(TcfGdprAppliesKey) == "1";
+
+        /// <summary>
+        /// Human-readable dump of the consent / IAB-TCF values the CMP wrote to
+        /// native storage. For the on-device debug panel, so you can confirm the SDK
+        /// actually grabbed them. All values are empty in the Editor / before the
+        /// CMP has run (no native storage there).
+        /// </summary>
+        public string GetConsentDebugSnapshot()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("- Consent (IAB TCF) -");
+            sb.AppendLine($"  GDPR applies: {GdprApplies()}");
+            sb.AppendLine($"  Consent type: {GetConsentType()}");
+            sb.AppendLine($"  Purpose 1 (store/access info): {HasConsentForPurpose(1)}");
+            sb.AppendLine($"  Purpose 3 (personalised ads): {HasConsentForPurpose(PersonalizationPurposeId)}");
+            sb.AppendLine($"  PurposeConsents: {Ellipsize(ReadNative(TcfPurposeConsentsKey), 24)}");
+            sb.AppendLine($"  VendorConsents: {Ellipsize(ReadNative("IABTCF_VendorConsents"), 24)}");
+            sb.AppendLine($"  TC string: {Ellipsize(GetTCFConsentString(), 32)}");
+            var usPrivacy = ReadNative("IABUSPrivacy_String");
+            if (!string.IsNullOrEmpty(usPrivacy)) sb.AppendLine($"  US Privacy: {usPrivacy}");
+            var gpp = ReadNative("IABGPP_HDR_GppString");
+            if (!string.IsNullOrEmpty(gpp)) sb.AppendLine($"  GPP: {Ellipsize(gpp, 24)}");
+            return sb.ToString();
+        }
+
+        private static string Ellipsize(string s, int max)
+        {
+            if (string.IsNullOrEmpty(s)) return "(empty)";
+            return s.Length <= max ? s : $"{s.Substring(0, max)}…(len {s.Length})";
+        }
 
         #endregion
 

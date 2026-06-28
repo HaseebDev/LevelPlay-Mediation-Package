@@ -52,10 +52,12 @@ namespace Autech.LevelPlay
         [SerializeField] private bool showConsentDialog = true;
         [Tooltip("InMobi CMP account p-code (CMP portal > profile menu; the leading 'p-' is optional). Required to show the consent UI.")]
         [SerializeField] private string cmpPCode = "";
-        [Tooltip("iOS only: let the CMP show the ATT popup. Leave OFF — this package's own ATT step handles it.")]
-        [SerializeField] private bool cmpShowIdfaPopup = false;
-        [Tooltip("Request the iOS App Tracking Transparency prompt before SDK init.")]
-        [SerializeField] private bool requestAttAuthorization = true;
+        [Tooltip("iOS only (recommended ON): the InMobi CMP shows the ATT \"Allow tracking\" popup as part of its consent flow. " +
+                 "This is the single source of truth for ATT — leave the app-side prompt below OFF.")]
+        [SerializeField] private bool cmpShowIdfaPopup = true;
+        [Tooltip("Legacy: have the app present the iOS ATT prompt itself (AttManager) before init, instead of the CMP. " +
+                 "Leave OFF — the InMobi CMP owns ATT now. Do not enable together with the CMP popup above.")]
+        [SerializeField] private bool requestAttAuthorization = false;
         [Tooltip("COPPA: flag all users as child-directed. Leave OFF for general-audience games.")]
         [SerializeField] private bool tagForChildDirectedTreatment = false;
         [SerializeField] private string privacyPolicyUrl = "https://autechsolutions.netlify.app/privacy";

@@ -478,6 +478,55 @@ namespace Autech.LevelPlay
             LevelPlayPrivacySettings.SetCCPA(optedOut);
         }
 
+        /// <summary>
+        /// One-shot snapshot of every privacy/consent/ATT value currently in effect —
+        /// for the demo debug panel, so you can verify on device that consent, ATT,
+        /// and the IAB TCF data were actually grabbed by the SDK. The advertising ID
+        /// is fetched separately via <see cref="RequestAdvertisingId"/> (it's async).
+        /// </summary>
+        public string GetPrivacyDebugSnapshot()
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("===== PRIVACY / CONSENT SNAPSHOT =====");
+            sb.AppendLine($"Ads enabled: {config.AdsEnabled} | RemoveAds: {config.RemoveAds} | Test mode: {config.IsTestModeActive}");
+            string attTrigger = config.CmpShowIdfaPopup ? "InMobi CMP (shouldDisplayIDFA)"
+                              : config.RequestAttAuthorization ? "app AttManager"
+                              : "none";
+            sb.AppendLine($"ATT trigger: {attTrigger}");
+            sb.AppendLine($"ATT status: {AttManager.Status} (authorized={AttManager.IsAuthorized})");
+            sb.AppendLine($"CCPA opt-out: {config.CcpaOptOut} | COPPA: {config.TagForChildDirectedTreatment}");
+            sb.Append(consentManager.GetConsentDebugSnapshot());
+            sb.AppendLine($"Can request ads: {consentManager.CanUserRequestAds()} | Privacy options available: {consentManager.ShouldShowPrivacyOptionsButton()}");
+            sb.Append("=====================================");
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Async-fetch the device advertising ID (IDFA on iOS / GAID on Android) and
+        /// deliver it to <paramref name="onResult"/>. For the debug panel. On iOS the
+        /// IDFA is all-zeros until ATT is authorized.
+        /// </summary>
+        public void RequestAdvertisingId(Action<string> onResult)
+        {
+            try
+            {
+                bool requested = Application.RequestAdvertisingIdentifierAsync(
+                    (string id, bool trackingEnabled, string error) =>
+                    {
+                        if (!string.IsNullOrEmpty(id))
+                            onResult?.Invoke($"{id} (tracking enabled: {trackingEnabled})");
+                        else
+                            onResult?.Invoke($"unavailable ({error})");
+                    });
+                if (!requested)
+                    onResult?.Invoke("not supported on this platform / Editor");
+            }
+            catch (Exception e)
+            {
+                onResult?.Invoke($"error: {e.Message}");
+            }
+        }
+
         #endregion
 
         #region Test Mode

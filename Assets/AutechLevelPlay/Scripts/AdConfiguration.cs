@@ -115,11 +115,15 @@ namespace Autech.LevelPlay
         // Without it, no consent UI is shown. Drop the leading "p-".
         public string CmpPCode { get; set; } = "";
 
-        // iOS only: let the CMP show the ATT ("Allow tracking") popup. Leave OFF
-        // when AttManager already handles ATT (the default in this package).
-        public bool CmpShowIdfaPopup { get; set; } = false;
+        // iOS only: let the InMobi CMP show the ATT ("Allow tracking") popup as part
+        // of its consent flow. This is now the package default — the CMP is the single
+        // source of truth for ATT, so we do NOT also run a standalone app-side prompt.
+        public bool CmpShowIdfaPopup { get; set; } = true;
 
-        public bool RequestAttAuthorization { get; set; } = true;
+        // Legacy app-controlled ATT via AttManager. OFF by default now that the CMP
+        // owns the ATT trigger; turn it on only if you deliberately want the app to
+        // present ATT itself instead of the CMP. Do not enable both.
+        public bool RequestAttAuthorization { get; set; } = false;
         public bool CcpaOptOut { get; set; } = false;
         public bool TagForChildDirectedTreatment { get; set; } = false;
         public string PrivacyPolicyUrl { get; set; } = "https://autechsolutions.netlify.app/privacy";

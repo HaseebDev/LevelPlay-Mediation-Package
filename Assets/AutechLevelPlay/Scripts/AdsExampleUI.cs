@@ -25,6 +25,7 @@ public class AdsExampleUI : MonoBehaviour
     public Text debugLogText;
 
     private string textLog = "LEVELPLAY DEBUG LOG:";
+    private bool privacyDumped;
 
     public delegate void DebugEvent(string msg);
     public static event DebugEvent OnDebugLog;
@@ -66,6 +67,15 @@ public class AdsExampleUI : MonoBehaviour
     private void UpdateButtonStates()
     {
         var ads = AdsManager.Instance;
+
+        // Once the SDK is up (consent + ATT resolved, LevelPlay initialised), dump
+        // the full privacy/consent/ATT/IDFA snapshot so it can be verified on device.
+        if (!privacyDumped && ads.IsInitialized)
+        {
+            privacyDumped = true;
+            DumpPrivacySnapshot();
+        }
+
         if (showRewardedBtn != null) showRewardedBtn.interactable = ads.IsRewardedReady();
         if (showInterstitialBtn != null) showInterstitialBtn.interactable = ads.IsInterstitialReady();
         if (toggleBannerBtn != null) toggleBannerBtn.interactable = ads.IsBannerLoaded();
@@ -118,6 +128,20 @@ public class AdsExampleUI : MonoBehaviour
     {
         LogTest("Opening privacy options...");
         AdsManager.Instance.ShowPrivacyOptionsForm();
+        // Re-dump after the user has had a moment to change their choice, so the
+        // panel reflects the updated consent values.
+        CancelInvoke(nameof(DumpPrivacySnapshot));
+        Invoke(nameof(DumpPrivacySnapshot), 4f);
+    }
+
+    /// <summary>
+    /// Logs the full privacy/consent/ATT/IDFA snapshot into the on-screen debug
+    /// panel — proof that consent, ATT, and the IAB TCF values were grabbed.
+    /// </summary>
+    public void DumpPrivacySnapshot()
+    {
+        LogTest(AdsManager.Instance.GetPrivacyDebugSnapshot());
+        AdsManager.Instance.RequestAdvertisingId(id => LogTest($"Advertising ID (IDFA/GAID): {id}"));
     }
 
     public void LaunchTestSuite()

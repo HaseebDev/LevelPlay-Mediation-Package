@@ -62,7 +62,7 @@ MonoBehaviour:
   autoLaunchTestSuite: 0
   showConsentDialog: 1
   cmpPCode: p-AjqnZCTwP-_0R
-  cmpShowIdfaPopup: 0
-  requestAttAuthorization: 1
+  cmpShowIdfaPopup: 1
+  requestAttAuthorization: 0
   tagForChildDirectedTreatment: 0
   privacyPolicyUrl: https://autechsolutions.netlify.app/privacy
