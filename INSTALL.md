@@ -13,7 +13,7 @@ https://github.com/HaseebDev/LevelPlay-Mediation-Package.git
 To pin a specific release, append a tag:
 
 ```
-https://github.com/HaseebDev/LevelPlay-Mediation-Package.git#v1.1.2
+https://github.com/HaseebDev/LevelPlay-Mediation-Package.git#v1.1.3
 ```
 
 …or add it directly to `Packages/manifest.json`:
@@ -21,7 +21,7 @@ https://github.com/HaseebDev/LevelPlay-Mediation-Package.git#v1.1.2
 ```json
 {
   "dependencies": {
-    "com.autech.levelplay-mediation": "https://github.com/HaseebDev/LevelPlay-Mediation-Package.git#v1.1.2"
+    "com.autech.levelplay-mediation": "https://github.com/HaseebDev/LevelPlay-Mediation-Package.git#v1.1.3"
   }
 }
 ```

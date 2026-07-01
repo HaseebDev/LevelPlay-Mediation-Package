@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [1.1.3] - 2026-07-02
+
+### Fixed
+- **iOS launch crash — `InMobiCMP.framework` was not embedded.** InMobiCMP is a
+  **dynamic** (Swift) framework, but EDM4U's `use_frameworks! :linkage => :static`
+  Podfile links it via `@rpath` without generating an "Embed Pods Frameworks" phase —
+  so the framework was never copied into the app bundle. Every iOS build from
+  v1.1.1 / v1.1.2 therefore crashed on launch with
+  `dyld: Library not loaded: @rpath/InMobiCMP.framework/InMobiCMP`. Added a post-build
+  step (`ChoiceCMPFrameworkEmbed`, ships with the InMobi CMP sample) that copies and
+  code-signs `InMobiCMP.framework` into the app's Frameworks folder at Xcode build
+  time, for both device and simulator. Verified on a physical iOS device: the app now
+  launches and the ATT prompt fires. (IronSource is a static framework — no embedding
+  needed.) v1.1.1's `<iosPods>` fix made iOS *compile*; this makes it *run*.
+
 ## [1.1.2] - 2026-06-28
 
 ### Fixed
