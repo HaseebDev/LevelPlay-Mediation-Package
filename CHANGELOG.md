@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [1.1.4] - 2026-07-08
+
+### Fixed
+- **iOS launch crash - missing dynamic mediation frameworks.** Extended the iOS
+  Xcode build phase added in v1.1.3 so it embeds and code-signs all known dynamic
+  LevelPlay/CMP frameworks required at runtime: `InMobiCMP.framework`,
+  `InMobiSDK.framework`, and `FBAudienceNetwork.framework`. This fixes dyld startup
+  failures such as `Library not loaded: @rpath/FBAudienceNetwork.framework/FBAudienceNetwork`
+  when CocoaPods resolves the pods but no "Embed Pods Frameworks" phase copies them
+  into the final app bundle.
+
 ## [1.1.3] - 2026-07-02
 
 ### Fixed
