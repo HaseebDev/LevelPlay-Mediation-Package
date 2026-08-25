@@ -56,7 +56,7 @@ Unity Registry) resolves automatically; the package compiles to a no-op until it
 
 1. Install `com.unity.services.levelplay` (Ads Mediation) from the Unity Registry.
 2. Install this package.
-3. Add a GameObject with `VerifyLevelPlay` to your first scene (or use the sample prefab).
+3. Add a GameObject with `VerifyLevelPlay` to your first scene (or use the auto-imported `Prefabs/LevelPlayBootstrap.prefab`).
 4. Fill in the LevelPlay **app keys** and **ad unit ids** from the
    [LevelPlay dashboard](https://platform.ironsrc.com) (Apps + Ad units pages).
 5. Press play. Init order: consent dialog → ATT (iOS) → `LevelPlay.Init` → ad loading.

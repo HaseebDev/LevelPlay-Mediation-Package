@@ -25,6 +25,7 @@ namespace Autech.LevelPlay.EditorTools
     internal static class InMobiCmpDependency
     {
         private const string PackageName   = "com.autech.levelplay-mediation";
+        private const string PrefabsSampleName = "Prefabs";
         private const string SampleName    = "InMobi CMP";
         private const string DocsUrl       = "https://support.inmobi.com/choice/other-resources/unity-app-implementation-sdk/";
         private const string DismissPrefKey = "Autech.LevelPlay.InMobiCmpPrompt.Dismissed";
@@ -58,6 +59,7 @@ namespace Autech.LevelPlay.EditorTools
                 return;
             }
 
+            ImportPrefabsSample();
             if (IsCmpPresent()) return;
             if (SessionState.GetBool(SessionDeferKey, false)) return;
             if (EditorPrefs.GetBool(DismissPrefKey, false)) return;
@@ -77,6 +79,24 @@ namespace Autech.LevelPlay.EditorTools
                 case 0: ImportBundledSample(); break;
                 case 1: SessionState.SetBool(SessionDeferKey, true); break;
                 case 2: EditorPrefs.SetBool(DismissPrefKey, true); break;
+            }
+        }
+
+        private static void ImportPrefabsSample()
+        {
+            try
+            {
+                var sample = Sample.FindByPackage(PackageName, string.Empty)
+                    .FirstOrDefault(s => s.displayName == PrefabsSampleName);
+                if (sample.Equals(default(Sample)) || string.IsNullOrEmpty(sample.resolvedPath) || sample.isImported)
+                    return;
+
+                if (sample.Import(Sample.ImportOptions.None))
+                    Debug.Log("[Autech.LevelPlay] Imported Prefabs/LevelPlayBootstrap.prefab.");
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[Autech.LevelPlay] Could not auto-import the Prefabs sample: {e.Message}");
             }
         }
 
@@ -106,7 +126,7 @@ namespace Autech.LevelPlay.EditorTools
                 if (sample.Import(Sample.ImportOptions.OverridePreviousImports))
                 {
                     Debug.Log("[Autech.LevelPlay] Imported InMobi CMP. Set your CMP p-code on the " +
-                              "VerifyandInitializeLevelPlay prefab (Inspector → Consent & Privacy).");
+                              "LevelPlayBootstrap prefab (Inspector → Consent & Privacy).");
                     // The InMobi plugin needs the Android Material Components + Gson
                     // libraries (declared in the sample's ChoiceCMPDependencies.xml).
                     // Trigger the resolver so consumers never hit the AAPT link error

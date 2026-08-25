@@ -9,6 +9,6 @@ simple on-screen UI:
 - **Privacy Options** — re-open the GDPR consent dialog
 - A live debug log panel mirrors every call.
 
-The scene also contains the **VerifyandInitializeLevelPlay** prefab (from the
+The scene also contains the **LevelPlayBootstrap** prefab (from the
 *Prefabs* sample) — set your LevelPlay app keys / ad unit ids on it to run.
 `AdsExampleUI.cs` is the wiring; read it to see the AdsManager API in use.

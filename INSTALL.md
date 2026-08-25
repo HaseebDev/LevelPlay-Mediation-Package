@@ -56,7 +56,7 @@ download it separately.
      package dependency so Package Manager resolves it automatically.
 2. Create a (free) account + a CMP **property** at **https://choice.inmobi.com**;
    note your **p-code** (profile menu — looks like `p-XXXXXXXX`).
-3. On the **VerifyandInitializeLevelPlay** prefab (Inspector → *Consent & Privacy*),
+3. On the **LevelPlayBootstrap** prefab (Inspector → *Consent & Privacy*),
    paste your **CMP p-code** (the leading `p-` is optional).
 4. Per-platform build setup is handled for you:
    - **Android**: InMobi's plugin declares **no** Android dependencies itself (its
@@ -100,6 +100,6 @@ satisfy the plugin's native Gson requirement.)
 
 ## Quick start
 
-After importing, add the `VerifyandInitializeLevelPlay` prefab (Samples ▸ Prefabs)
+After importing, add the `LevelPlayBootstrap` prefab (Samples ▸ Prefabs)
 to your first scene and fill in your LevelPlay app keys / ad unit ids. See the
 [README](README.md) for the full quick-start.

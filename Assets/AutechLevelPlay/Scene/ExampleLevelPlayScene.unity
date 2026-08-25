@@ -1116,7 +1116,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2310368041958125014, guid: 296a5616ca050b74b800fa31d33ca24d, type: 3}
       propertyPath: m_Name
-      value: VerifyandInitializeLevelPlay
+      value: LevelPlayBootstrap
       objectReference: {fileID: 0}
     - target: {fileID: 2784422891448605819, guid: 296a5616ca050b74b800fa31d33ca24d, type: 3}
       propertyPath: m_LocalPosition.x

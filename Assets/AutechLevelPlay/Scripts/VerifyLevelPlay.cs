@@ -60,7 +60,7 @@ namespace Autech.LevelPlay
         [SerializeField] private bool requestAttAuthorization = false;
         [Tooltip("COPPA: flag all users as child-directed. Leave OFF for general-audience games.")]
         [SerializeField] private bool tagForChildDirectedTreatment = false;
-        [SerializeField] private string privacyPolicyUrl = "https://autechsolutions.netlify.app/privacy";
+        [SerializeField] private string privacyPolicyUrl = "https://autechsolutions.netlify.app/privacy-policy";
 
         /// <summary>True once AdsManager finished initializing.</summary>
         public bool IsAdsManagerInitialized => AdsManager.Instance.IsInitialized;

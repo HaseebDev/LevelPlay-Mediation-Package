@@ -15,7 +15,7 @@ InMobi CMP → Import**.
 
 ## After importing
 
-1. Set your **CMP p-code** on the `VerifyandInitializeLevelPlay` prefab
+1. Set your **CMP p-code** on the `LevelPlayBootstrap` prefab
    (Inspector → *Consent & Privacy*). Get it from https://choice.inmobi.com.
 2. The plugin requires **`com.unity.nuget.newtonsoft-json`** (declared as a
    package dependency — Package Manager resolves it automatically).

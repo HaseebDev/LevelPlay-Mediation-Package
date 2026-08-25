@@ -126,7 +126,7 @@ namespace Autech.LevelPlay
         public bool RequestAttAuthorization { get; set; } = false;
         public bool CcpaOptOut { get; set; } = false;
         public bool TagForChildDirectedTreatment { get; set; } = false;
-        public string PrivacyPolicyUrl { get; set; } = "https://autechsolutions.netlify.app/privacy";
+        public string PrivacyPolicyUrl { get; set; } = "https://autechsolutions.netlify.app/privacy-policy";
 
         /// <summary>LevelPlay app key for the current runtime platform.</summary>
         public string AppKey

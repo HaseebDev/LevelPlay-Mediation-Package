@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.1.5] - 2026-08-25
+
+### Changed
+- Auto-import the package's prefab sample once on editor load and expose the bootstrap as `Prefabs/LevelPlayBootstrap.prefab`.
+- Use `https://autechsolutions.netlify.app/privacy-policy` as the default privacy-policy URL.
+
 ## [1.1.4] - 2026-07-08
 
 ### Fixed

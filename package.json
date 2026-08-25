@@ -1,6 +1,6 @@
 {
   "name": "com.autech.levelplay-mediation",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "displayName": "Autech LevelPlay Mediation",
   "description": "Unity LevelPlay (Unity Ads) mediation wrapper with InMobi CMP (IAB TCF v2.2) GDPR consent, CCPA/COPPA flags, iOS ATT handling, and encrypted Remove-Ads persistence. Mirrors the Autech AdMob Mediation package API so game code migrates with namespace changes only.",
   "unity": "2021.3",
@@ -33,12 +33,12 @@
   "samples": [
     {
       "displayName": "Example Scene with UI",
-      "description": "Complete example scene with AdsExampleUI and all ad-format demos, wired to the VerifyandInitializeLevelPlay prefab.",
+      "description": "Complete example scene with AdsExampleUI and all ad-format demos, wired to the LevelPlayBootstrap prefab.",
       "path": "Samples~/ExampleScene"
     },
     {
       "displayName": "Prefabs",
-      "description": "Ready-to-use VerifyandInitializeLevelPlay prefab.",
+      "description": "Ready-to-use LevelPlayBootstrap prefab; imported automatically into the Prefabs sample folder.",
       "path": "Samples~/Prefabs"
     },
     {
