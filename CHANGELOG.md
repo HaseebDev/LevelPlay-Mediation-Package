@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [1.1.9] - 2026-08-27
+
+### Fixed
+- Resolve the package source from its mounted asset path so the stable prefab auto-import works during the first editor domain load.
+
 ## [1.1.8] - 2026-08-27
 
 ### Changed

@@ -88,7 +88,8 @@ namespace Autech.LevelPlay.EditorTools
         {
             try
             {
-                var package = UnityEditor.PackageManager.PackageInfo.FindForAssembly(typeof(InMobiCmpDependency).Assembly);
+                var package = UnityEditor.PackageManager.PackageInfo.FindForAssetPath(
+                    $"Packages/{PackageName}/Editor/InMobiCmpDependency.cs");
                 if (package == null) return;
 
                 var source = Path.Combine(package.resolvedPath, "Samples~", PrefabsSampleName);
