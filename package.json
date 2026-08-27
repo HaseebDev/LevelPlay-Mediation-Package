@@ -1,6 +1,6 @@
 {
   "name": "com.autech.levelplay-mediation",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "displayName": "Autech LevelPlay Mediation",
   "description": "Unity LevelPlay (Unity Ads) mediation wrapper with InMobi CMP (IAB TCF v2.2) GDPR consent, CCPA/COPPA flags, iOS ATT handling, and encrypted Remove-Ads persistence. Mirrors the Autech AdMob Mediation package API so game code migrates with namespace changes only.",
   "unity": "2021.3",
@@ -38,7 +38,7 @@
     },
     {
       "displayName": "Prefabs",
-      "description": "Ready-to-use LevelPlayBootstrap prefab; imported automatically into the Prefabs sample folder.",
+      "description": "Ready-to-use LevelPlayBootstrap prefab; copied once to Assets/Autech/LevelPlay/Prefabs.",
       "path": "Samples~/Prefabs"
     },
     {

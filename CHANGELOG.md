@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [1.1.8] - 2026-08-27
+
+### Changed
+- Auto-import the bootstrap prefab once to the stable `Assets/Autech/LevelPlay/Prefabs` path instead of creating a new versioned Samples folder after every package upgrade.
+
 ## [1.1.7] - 2026-08-27
 
 ### Fixed

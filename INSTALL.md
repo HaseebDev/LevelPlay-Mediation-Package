@@ -100,6 +100,6 @@ satisfy the plugin's native Gson requirement.)
 
 ## Quick start
 
-After importing, add the `LevelPlayBootstrap` prefab (Samples ▸ Prefabs)
+After importing, add `Assets/Autech/LevelPlay/Prefabs/LevelPlayBootstrap.prefab`
 to your first scene and fill in your LevelPlay app keys / ad unit ids. See the
 [README](README.md) for the full quick-start.

@@ -27,6 +27,7 @@ namespace Autech.LevelPlay.EditorTools
     {
         private const string PackageName   = "com.autech.levelplay-mediation";
         private const string PrefabsSampleName = "Prefabs";
+        private const string PrefabsImportPath = "Assets/Autech/LevelPlay/Prefabs";
         private const string SampleName    = "InMobi CMP";
         private const string DocsUrl       = "https://support.inmobi.com/choice/other-resources/unity-app-implementation-sdk/";
         private const string DismissPrefKey = "Autech.LevelPlay.InMobiCmpPrompt.Dismissed";
@@ -91,7 +92,7 @@ namespace Autech.LevelPlay.EditorTools
                 if (package == null) return;
 
                 var source = Path.Combine(package.resolvedPath, "Samples~", PrefabsSampleName);
-                var destination = Path.Combine("Assets", "Samples", package.displayName, package.version, PrefabsSampleName);
+                var destination = PrefabsImportPath;
                 if (Directory.Exists(destination) || !Directory.Exists(source)) return;
 
                 Directory.CreateDirectory(Path.GetDirectoryName(destination));
@@ -99,7 +100,7 @@ namespace Autech.LevelPlay.EditorTools
                 foreach (var meta in Directory.GetFiles(destination, "*.meta", SearchOption.AllDirectories))
                     File.Delete(meta);
                 AssetDatabase.Refresh();
-                Debug.Log("[Autech.LevelPlay] Imported Prefabs/LevelPlayBootstrap.prefab.");
+                Debug.Log("[Autech.LevelPlay] Imported Assets/Autech/LevelPlay/Prefabs/LevelPlayBootstrap.prefab.");
             }
             catch (Exception e)
             {
