@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [1.1.10] - 2026-08-27
+
+### Fixed
+- Resolve the active package from Unity's registered-package list without producing virtual-folder warnings.
+
 ## [1.1.9] - 2026-08-27
 
 ### Fixed
