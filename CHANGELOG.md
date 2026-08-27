@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [1.1.7] - 2026-08-27
+
+### Fixed
+- Let Unity generate fresh metadata for auto-imported prefab samples, avoiding GUID collisions with older imported sample versions.
+
 ## [1.1.6] - 2026-08-27
 
 ### Fixed

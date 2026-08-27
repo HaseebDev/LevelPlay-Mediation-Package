@@ -96,6 +96,8 @@ namespace Autech.LevelPlay.EditorTools
 
                 Directory.CreateDirectory(Path.GetDirectoryName(destination));
                 FileUtil.CopyFileOrDirectory(source, destination);
+                foreach (var meta in Directory.GetFiles(destination, "*.meta", SearchOption.AllDirectories))
+                    File.Delete(meta);
                 AssetDatabase.Refresh();
                 Debug.Log("[Autech.LevelPlay] Imported Prefabs/LevelPlayBootstrap.prefab.");
             }
