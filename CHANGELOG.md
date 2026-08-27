@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [1.1.6] - 2026-08-27
+
+### Fixed
+- Import the prefab sample from the active package path instead of Unity's stale Package Manager sample cache after a Git-tag upgrade.
+
 ## [1.1.5] - 2026-08-25
 
 ### Changed

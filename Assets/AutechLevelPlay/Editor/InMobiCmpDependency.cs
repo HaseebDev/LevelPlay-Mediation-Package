@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
@@ -86,13 +87,17 @@ namespace Autech.LevelPlay.EditorTools
         {
             try
             {
-                var sample = Sample.FindByPackage(PackageName, string.Empty)
-                    .FirstOrDefault(s => s.displayName == PrefabsSampleName);
-                if (sample.Equals(default(Sample)) || string.IsNullOrEmpty(sample.resolvedPath) || sample.isImported)
-                    return;
+                var package = UnityEditor.PackageManager.PackageInfo.FindForAssembly(typeof(InMobiCmpDependency).Assembly);
+                if (package == null) return;
 
-                if (sample.Import(Sample.ImportOptions.None))
-                    Debug.Log("[Autech.LevelPlay] Imported Prefabs/LevelPlayBootstrap.prefab.");
+                var source = Path.Combine(package.resolvedPath, "Samples~", PrefabsSampleName);
+                var destination = Path.Combine("Assets", "Samples", package.displayName, package.version, PrefabsSampleName);
+                if (Directory.Exists(destination) || !Directory.Exists(source)) return;
+
+                Directory.CreateDirectory(Path.GetDirectoryName(destination));
+                FileUtil.CopyFileOrDirectory(source, destination);
+                AssetDatabase.Refresh();
+                Debug.Log("[Autech.LevelPlay] Imported Prefabs/LevelPlayBootstrap.prefab.");
             }
             catch (Exception e)
             {
