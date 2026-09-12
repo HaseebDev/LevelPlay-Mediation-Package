@@ -63,6 +63,15 @@ namespace Autech.LevelPlay.DevTools
             CopyTree($"{DevRoot}/Plugins", "Runtime/Plugins");
             CopyTree($"{DevRoot}/Editor",  "Editor");
 
+            // The local consent form and its sprites ship INSIDE the package, not as a
+            // sample: LocalConsentManager loads the prefab with Resources.Load, so the
+            // consumer never imports or wires anything. Both folders must be mirrored
+            // or a release would quietly ship a package whose consent form is missing.
+            CopyTree($"{DevRoot}/Resources", "Runtime/Resources");
+            CopyInto($"{DevRoot}/Resources.meta", "Runtime/Resources.meta");
+            CopyTree($"{DevRoot}/Sprites", "Runtime/Sprites");
+            CopyInto($"{DevRoot}/Sprites.meta", "Runtime/Sprites.meta");
+
             // The example UI is a sample, not core — it ships under
             // Samples~/ExampleScene, never in the distributed Runtime assembly.
             DeleteRepoFile("Runtime/Scripts/AdsExampleUI.cs");

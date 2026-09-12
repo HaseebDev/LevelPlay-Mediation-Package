@@ -48,8 +48,31 @@ namespace Autech.LevelPlay
         [SerializeField] private bool autoLaunchTestSuite = false;
 
         [Header("Consent & Privacy (InMobi CMP)")]
-        [Tooltip("Run the InMobi CMP consent flow on first launch (GDPR / IAB TCF).")]
+        [Tooltip("Run the consent flow on first launch. Gates whichever consent path is selected below.")]
         [SerializeField] private bool showConsentDialog = true;
+        [Tooltip("ON = collect consent with the package's own local form (no InMobi account or p-code needed). " +
+                 "OFF = use the InMobi CMP (IAB TCF v2.2), the default. The local form is NOT Google-certified; " +
+                 "use it only where your networks do not require a certified CMP.")]
+        [SerializeField] private bool useLocalConsent = false;
+        [Tooltip("Local form only. How the two choices start on a FIRST ask. ON pre-ticks them, so the user opts out " +
+                 "rather than in, which raises opt-in rates. Note that GDPR Recital 32 and the CJEU's Planet49 ruling " +
+                 "say a pre-ticked box does not establish valid consent, so in the EEA/UK this weakens the consent " +
+                 "this form collects. Re-opening the form always shows the user's real stored answer, never this default.")]
+        [SerializeField] private bool defaultChoicesTicked = true;
+        [Tooltip("Local form only. Bump this whenever the privacy policy or the set of ad partners changes: " +
+                 "answers given against an older version stop counting and the user is asked again.")]
+        [SerializeField] private int consentPolicyVersion = 1;
+        [Tooltip("Local form only. ON = only ask where GDPR/UK GDPR applies, resolved from the user's IP on the " +
+                 "first launch that needs an answer. Every failure path (timeout, no network, blocked endpoint) " +
+                 "shows the form anyway, so a lookup problem can never silently skip somebody who should have " +
+                 "been asked.")]
+        [SerializeField] private bool onlyAskWhereGdprApplies = false;
+        [Tooltip("Endpoint for that lookup. Must return a 'loc=XX' line. Cloudflare's trace endpoint is the " +
+                 "default because it needs no account or API key. Point it at your own backend to avoid the " +
+                 "third-party dependency, or clear it to fall back to the device region setting.")]
+        [SerializeField] private string geoLookupUrl = "https://www.cloudflare.com/cdn-cgi/trace";
+        [Tooltip("Seconds to wait for the geo lookup before giving up and showing the form anyway.")]
+        [SerializeField] private int geoLookupTimeoutSeconds = 3;
         [Tooltip("InMobi CMP account p-code (CMP portal > profile menu; the leading 'p-' is optional). Required to show the consent UI.")]
         [SerializeField] private string cmpPCode = "";
         [Tooltip("iOS only (recommended ON): the InMobi CMP shows the ATT \"Allow tracking\" popup as part of its consent flow. " +
@@ -97,6 +120,12 @@ namespace Autech.LevelPlay
                 PreferredBannerSize = preferredBannerSize,
                 BannerPosition = bannerPosition,
                 ShowConsentDialog = showConsentDialog,
+                UseLocalConsent = useLocalConsent,
+                DefaultChoicesTicked = defaultChoicesTicked,
+                ConsentPolicyVersion = consentPolicyVersion,
+                OnlyAskWhereGdprApplies = onlyAskWhereGdprApplies,
+                GeoLookupUrl = geoLookupUrl,
+                GeoLookupTimeoutSeconds = geoLookupTimeoutSeconds,
                 CmpPCode = NormalizePCode(cmpPCode),
                 CmpShowIdfaPopup = cmpShowIdfaPopup,
                 RequestAttAuthorization = requestAttAuthorization,
@@ -173,7 +202,7 @@ namespace Autech.LevelPlay
         public void TestLaunchTestSuite() => AdsManager.Instance.LaunchTestSuite();
 
         [ContextMenu("Reset Stored Consent (Testing)")]
-        public void TestResetConsent() => AdsManager.Instance.Consent.ResetConsentForTesting();
+        public void TestResetConsent() => AdsManager.Instance.ResetConsentForTesting();
 
         [ContextMenu("Log Debug Status")]
         public void TestLogDebugStatus() => AdsManager.Instance.LogDebugStatus();

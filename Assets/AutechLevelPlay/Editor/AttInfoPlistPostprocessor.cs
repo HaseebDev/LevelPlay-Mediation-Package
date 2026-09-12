@@ -78,14 +78,23 @@ namespace Autech.LevelPlay.EditorTools
                 var adsEnabled = serialized.FindProperty("adsEnabled");
                 var requestAtt = serialized.FindProperty("requestAttAuthorization");
                 var cmpIdfa = serialized.FindProperty("cmpShowIdfaPopup");
+                var useLocal = serialized.FindProperty("useLocalConsent");
 
-                // The ATT prompt may be presented either by the app (AttManager,
-                // requestAttAuthorization) OR by the InMobi CMP (cmpShowIdfaPopup,
-                // the package default). Either path REQUIRES the usage string in
-                // Info.plist — without it the ATT prompt crashes at runtime.
+                // The ATT prompt may be presented either by the app (AttManager) OR
+                // by the InMobi CMP (cmpShowIdfaPopup). Either path REQUIRES the
+                // usage string in Info.plist — without it the ATT prompt crashes at
+                // runtime.
+                //
+                // On the local-consent path the CMP never starts, so cmpShowIdfaPopup
+                // triggers nothing and AdsManager presents the prompt itself. Treat
+                // local consent as an app-side trigger, and discount the CMP one, so
+                // the key is injected when it is genuinely needed and left out when
+                // nothing will ever prompt (shipping it unused trips Apple's
+                // plist/App-Privacy cross-check).
                 bool ads = adsEnabled != null && adsEnabled.boolValue;
-                bool attByApp = requestAtt != null && requestAtt.boolValue;
-                bool attByCmp = cmpIdfa != null && cmpIdfa.boolValue;
+                bool localConsent = useLocal != null && useLocal.boolValue;
+                bool attByApp = (requestAtt != null && requestAtt.boolValue) || localConsent;
+                bool attByCmp = cmpIdfa != null && cmpIdfa.boolValue && !localConsent;
                 if (ads && (attByApp || attByCmp))
                 {
                     return true;

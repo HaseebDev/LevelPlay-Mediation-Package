@@ -2,6 +2,99 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-12
+
+### Added
+- **Local consent form** as an alternative to the InMobi CMP, selected with the new
+  `useLocalConsent` toggle on the LevelPlayBootstrap prefab. Collects personalised-ads
+  and analytics choices, stores them on the device, and hands the ads decision to
+  LevelPlay, which forwards it to every mediated adapter. Off by default, so existing
+  projects are unaffected. Not an IAB TCF CMP and not Google-certified; see INSTALL.md.
+- Meta Audience Network `setAdvertiserTrackingEnabled` is now applied by the package
+  from the device's ATT status, before LevelPlay init, as Meta requires. Resolved
+  dynamically, so it is a safe no-op in builds without the Meta adapter.
+
+### Changed
+- Require **Unity 6** (was 2021.3) and **com.unity.ugui 2.0.0** (was 1.0.0), which is
+  what guarantees TextMeshPro is present for the local consent form.
+- Require LevelPlay **9.5.1** (was 9.4.1). GDPR consent now uses the current
+  `LevelPlayPrivacySettings.SetGDPRConsent(bool)`, gated behind a `LEVELPLAY_9_5_OR_NEWER`
+  version define with a fallback to the older global call on 9.4.x. The per-network
+  `SetGDPRConsents(Dictionary)` is deliberately NOT used: 9.5.0 deprecated it, and it
+  replaces every stored entry on each call, silently revoking consent for any network
+  missing from the map.
+- The iOS ATT prompt is now presented by the app whenever `useLocalConsent` is on. On
+  that path the InMobi CMP never starts, so its `cmpShowIdfaPopup` trigger is dead and
+  the IDFA would otherwise stay all-zeros for the life of the app.
+- `NSUserTrackingUsageDescription` injection accounts for the local-consent path, and
+  the on-device privacy snapshot reports the correct ATT trigger for it.
+- `UnityEngine.UI` is now an explicit assembly reference instead of relying on
+  auto-referencing.
+
+### Fixed
+- The iOS ATT prompt is now awaited on **every** path that expects one, including the
+  InMobi CMP path. The consent flow previously returned as soon as the TC string
+  landed, which is before the user answers ATT, so anything reading the status
+  straight after (such as the Meta flag) saw a pending value.
+- The consent form can no longer be opened twice. A second request while one is open
+  used to stack a second full-screen canvas; answering either left the other alive and
+  raycasting, blocking all input and leaving initialization stuck forever.
+- The privacy-options entry point now reports itself unavailable while the form is
+  open, which is what allowed the double-open above.
+- The EventSystem the form creates is now `DontDestroyOnLoad`, like the form itself.
+  A scene load while the form was up destroyed the EventSystem but not the form,
+  leaving it visible and permanently unclickable.
+- An unanswered consent no longer pushes "denied". Skipping the flow, or failing to
+  show the form, now leaves the GDPR flag untouched instead of telling every network
+  the user refused.
+- The first answer no longer applies the consent flags twice.
+- The on-device privacy snapshot reports availability from the active consent path
+  instead of always querying the InMobi component.
+- Re-opening the privacy options no longer swallows exceptions silently.
+- The InMobi path no longer raises an unexpected ATT prompt. Widening the ATT gate had
+  made projects where the CMP never starts (no p-code, plugin missing, dialog off) show
+  a tracking prompt they never showed before. The CMP path now waits for the CMP's own
+  prompt instead of raising one, and only when the CMP actually took ownership.
+- Switching to the local path now clears any leftover `IABTCF_*` values. A TC string from
+  a previous InMobi build could otherwise keep telling the adapters "consented" and
+  override a user who had just declined in the local form.
+- `ResetConsentForTesting` clears both consent paths instead of only the active one.
+- The consent form refuses to show, with a clear error, when its buttons are unwired or
+  when TextMeshPro is missing. Both previously produced a form that could never be
+  answered, hanging initialization forever with no ads and nothing in the log.
+- The form now recovers if the EventSystem it was relying on is destroyed by a scene
+  load, and cleans up its own EventSystem on destroy rather than only on submit.
+
+### Added (continued)
+- The consent form now shows a **privacy policy link**, driven by the existing
+  `privacyPolicyUrl` setting, which until now was configured but read by nothing.
+  Hidden automatically when no URL is set.
+- **Consent records now carry a timestamp and a policy version.** New
+  `consentPolicyVersion` setting: bump it when the privacy policy or the partner list
+  changes and existing answers stop counting, so those users are asked again rather
+  than carrying consent forward to terms they never saw. Exposed as
+  `LocalConsent.AnsweredAtUtc` and `LocalConsent.AnsweredPolicyVersion`.
+- **Optional region-limited asking.** New `onlyAskWhereGdprApplies` setting, off by
+  default. When on, the form is shown only in the EEA/UK, resolved from the user's IP
+  on the first launch that needs an answer, and no GDPR signal is sent elsewhere rather
+  than a refusal. Every failure path (timeout, no network, blocked endpoint, reply with
+  no country) shows the form anyway, so a lookup problem can never silently skip
+  somebody who should have been asked. `geoLookupUrl` defaults to Cloudflare's trace
+  endpoint and can be pointed at your own backend, or cleared to fall back to the
+  device Region setting.
+- **The consent form's choices are pre-ticked by default**, via the new
+  `defaultChoicesTicked` setting, so the user opts out rather than in. Note that GDPR
+  Recital 32 and the CJEU's Planet49 ruling (C-673/17) say a pre-ticked box does not
+  establish valid consent, so in the EEA/UK this weakens the consent the form collects;
+  set it to false there, or pair it with `onlyAskWhereGdprApplies`. Re-opening the form
+  always shows the user's real stored answer, never this default.
+- **A build now fails** if the local consent form is enabled without TextMeshPro in the
+  project, instead of shipping a form whose labels cannot render. Checked at build time
+  rather than declared as a package dependency, because no single dependency entry
+  project, or if TMP Essential Resources have not been imported so its labels resolve
+  no font. The second case is the common one and Package Manager cannot express it as
+  a dependency.
+
 ## [1.1.10] - 2026-08-27
 
 ### Fixed

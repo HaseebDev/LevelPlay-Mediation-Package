@@ -1,9 +1,9 @@
 {
   "name": "com.autech.levelplay-mediation",
-  "version": "1.1.10",
+  "version": "1.2.0",
   "displayName": "Autech LevelPlay Mediation",
-  "description": "Unity LevelPlay (Unity Ads) mediation wrapper with InMobi CMP (IAB TCF v2.2) GDPR consent, CCPA/COPPA flags, iOS ATT handling, and encrypted Remove-Ads persistence. Mirrors the Autech AdMob Mediation package API so game code migrates with namespace changes only.",
-  "unity": "2021.3",
+  "description": "Unity LevelPlay (Unity Ads) mediation wrapper with a choice of GDPR consent paths: InMobi CMP (IAB TCF v2.2) or a built-in local consent form. Adds CCPA/COPPA flags, iOS ATT handling, Meta Audience Network advertiser-tracking setup, and encrypted Remove-Ads persistence. Mirrors the Autech AdMob Mediation package API so game code migrates with namespace changes only.",
+  "unity": "6000.0",
   "license": "MIT",
   "author": {
     "name": "AU-TECH Solutions",
@@ -17,8 +17,8 @@
   "changelogUrl": "https://github.com/HaseebDev/LevelPlay-Mediation-Package/blob/main/CHANGELOG.md",
   "licensesUrl": "https://github.com/HaseebDev/LevelPlay-Mediation-Package/blob/main/LICENSE.md",
   "dependencies": {
-    "com.unity.services.levelplay": "9.4.1",
-    "com.unity.ugui": "1.0.0",
+    "com.unity.services.levelplay": "9.5.1",
+    "com.unity.ugui": "2.0.0",
     "com.unity.nuget.newtonsoft-json": "3.2.1"
   },
   "keywords": [

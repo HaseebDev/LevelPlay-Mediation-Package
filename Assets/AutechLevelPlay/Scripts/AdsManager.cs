@@ -21,6 +21,12 @@ namespace Autech.LevelPlay
         public BannerSize PreferredBannerSize;
         public BannerPosition BannerPosition;
         public bool ShowConsentDialog;
+        public bool UseLocalConsent;
+        public bool DefaultChoicesTicked;
+        public int ConsentPolicyVersion;
+        public bool OnlyAskWhereGdprApplies;
+        public string GeoLookupUrl;
+        public int GeoLookupTimeoutSeconds;
         public string CmpPCode;
         public bool CmpShowIdfaPopup;
         public bool RequestAttAuthorization;
@@ -86,6 +92,7 @@ namespace Autech.LevelPlay
         private readonly AdConfiguration config = new AdConfiguration();
         private AdPersistenceManager persistenceManager;
         private ConsentManager consentManager;
+        private LocalConsentManager localConsentManager;
         private MediationConsentManager mediationConsentManager;
 
         private BannerAdController bannerController;
@@ -102,8 +109,17 @@ namespace Autech.LevelPlay
         /// <summary>True when ads run in test mode for this build (Development build / Editor under Auto, or forced On).</summary>
         public bool IsTestMode => config.IsTestModeActive;
 
-        /// <summary>Consent component for advanced queries (consent type, CCPA toggle).</summary>
+        /// <summary>
+        /// InMobi CMP component for advanced queries (TC string, CCPA form).
+        /// NOTE: this is a direct escape hatch to the CMP and does NOT respect
+        /// <c>useLocalConsent</c>. Calling <c>Consent.ShowPrivacyOptionsForm()</c> or
+        /// <c>Consent.ShowCcpaForm()</c> reaches InMobi even on the local path. Use
+        /// <see cref="ShowPrivacyOptionsForm"/> on this class for the routed call.
+        /// </summary>
         public ConsentManager Consent => consentManager;
+
+        /// <summary>Local consent component; only drives the flow while UseLocalConsent is on.</summary>
+        public LocalConsentManager LocalConsent => localConsentManager;
 
         private void Awake()
         {
@@ -124,7 +140,11 @@ namespace Autech.LevelPlay
             };
 
             consentManager = new ConsentManager(config);
-            mediationConsentManager = new MediationConsentManager(config, consentManager);
+            localConsentManager = new LocalConsentManager(config);
+            mediationConsentManager = new MediationConsentManager(config, consentManager, localConsentManager);
+
+            // Changing the choice in the local form re-pushes the flags to the networks.
+            localConsentManager.OnConsentChanged += _ => mediationConsentManager.Apply();
         }
 
         #region Initialization
@@ -140,6 +160,18 @@ namespace Autech.LevelPlay
             config.PreferredBannerSize = settings.PreferredBannerSize;
             config.BannerPosition = settings.BannerPosition;
             config.ShowConsentDialog = settings.ShowConsentDialog;
+            config.UseLocalConsent = settings.UseLocalConsent;
+            config.OnlyAskWhereGdprApplies = settings.OnlyAskWhereGdprApplies;
+            config.GeoLookupUrl = settings.GeoLookupUrl;
+            if (settings.GeoLookupTimeoutSeconds > 0)
+            {
+                config.GeoLookupTimeoutSeconds = settings.GeoLookupTimeoutSeconds;
+            }
+            config.DefaultChoicesTicked = settings.DefaultChoicesTicked;
+            if (settings.ConsentPolicyVersion > 0)
+            {
+                config.ConsentPolicyVersion = settings.ConsentPolicyVersion;
+            }
             config.CmpPCode = settings.CmpPCode;
             config.CmpShowIdfaPopup = settings.CmpShowIdfaPopup;
             config.RequestAttAuthorization = settings.RequestAttAuthorization;
@@ -202,18 +234,62 @@ namespace Autech.LevelPlay
 
                 // 1. Consent BEFORE init: LevelPlay wants CCPA/COPPA flags pre-init,
                 //    and GDPR consent must exist before any personalized request.
-                await consentManager.InitializeConsentAsync();
+                if (config.UseLocalConsent)
+                {
+                    // The adapters read IABTCF_* straight out of native storage. A TC
+                    // string left behind by a previous InMobi build would keep saying
+                    // "consented" and could override a user who declines in the local
+                    // form, silently. Clear it before collecting our own decision.
+                    consentManager.ClearTcfStorage();
+                    await localConsentManager.InitializeConsentAsync();
+                }
+                else
+                {
+                    await consentManager.InitializeConsentAsync();
+                }
 
-                // GDPR flows via the InMobi CMP's IAB TCF string; this applies the
-                // explicit CCPA/COPPA flags to LevelPlay before init.
+                // InMobi path: GDPR flows via the IAB TCF string and this applies only
+                // the explicit CCPA/COPPA flags. Local path: this also hands the GDPR
+                // decision to LevelPlay, which forwards it to every mediated adapter.
                 mediationConsentManager.Apply();
 
                 // 2. ATT BEFORE init: Unity requires the ATT prompt before
-                //    initializing any SDK that may access the IDFA.
-                if (config.RequestAttAuthorization)
+                //    initializing any SDK that may access the IDFA, and step 3 below
+                //    reads the resolved status, so this must not be skipped.
+                //
+                //    Await whenever ANY trigger is configured:
+                //      - useLocalConsent: the CMP never starts, so the app owns the
+                //        prompt. Without this the status stays NotDetermined and the
+                //        IDFA is all-zeros for the life of the app.
+                //      - cmpShowIdfaPopup: the CMP raises the prompt, but the consent
+                //        flow returns as soon as the TC string lands, which happens
+                //        BEFORE the user answers ATT. Awaiting here waits out that
+                //        sheet so step 3 reads a settled value instead of a pending one.
+                //      - requestAttAuthorization: the explicit app-side prompt.
+                //    Who raises the prompt decides which call is used. Asking for one
+                //    on top of the CMP's would double-request, and worse, would raise
+                //    a prompt in projects where the CMP silently never started (no
+                //    p-code, plugin missing, dialog disabled) and therefore never
+                //    showed one before. DidStartWithIdfaPrompt reports whether the CMP
+                //    genuinely took ownership.
+                bool attByApp = config.RequestAttAuthorization || config.UseLocalConsent;
+                bool attByCmp = !config.UseLocalConsent
+                                && config.CmpShowIdfaPopup
+                                && consentManager.DidStartWithIdfaPrompt;
+
+                if (attByApp)
                 {
                     await AttManager.RequestAuthorizationAsync();
                 }
+                else if (attByCmp)
+                {
+                    await AttManager.WaitForResolutionAsync();
+                }
+
+                // 3. Meta Audience Network requires its advertiser-tracking flag
+                //    BEFORE LevelPlay init, and no adapter derives it from the ATT
+                //    status for you. Safe no-op when Meta is not in the build.
+                MetaAudienceNetwork.ApplyAdvertiserTracking(AttManager.IsAuthorized);
 
                 if (!config.HasAppKey)
                 {
@@ -221,7 +297,7 @@ namespace Autech.LevelPlay
                     return;
                 }
 
-                // 3. Test mode (auto-on in Development builds) must be flagged
+                // 4. Test mode (auto-on in Development builds) must be flagged
                 //    before Init: this enables the integration test suite. Test
                 //    ads at your real trigger points additionally require this
                 //    device to be registered as a test device — the advertising
@@ -232,7 +308,7 @@ namespace Autech.LevelPlay
                     LogTestModeBanner();
                 }
 
-                // 4. Initialize the SDK and await the result event.
+                // 5. Initialize the SDK and await the result event.
                 var initCompletion = new TaskCompletionSource<bool>();
 
                 Action<LevelPlayConfiguration> onSuccess = null;
@@ -460,16 +536,45 @@ namespace Autech.LevelPlay
         public void ShowPrivacyOptionsForm()
         {
             if (!config.AdsEnabled) return;
+            if (config.UseLocalConsent)
+            {
+                localConsentManager.ShowPrivacyOptionsForm();
+                return;
+            }
             consentManager.ShowPrivacyOptionsForm();
         }
 
         /// <summary>False while ads are disabled — no consent to manage, so settings hide the button.</summary>
-        public bool ShouldShowPrivacyOptionsButton() => config.AdsEnabled && consentManager.ShouldShowPrivacyOptionsButton();
+        public bool ShouldShowPrivacyOptionsButton()
+        {
+            if (!config.AdsEnabled) return false;
+            if (config.UseLocalConsent) return localConsentManager.ShouldShowPrivacyOptionsButton();
+            return consentManager.ShouldShowPrivacyOptionsButton();
+        }
 
-        public bool CanUserRequestAds() => consentManager.CanUserRequestAds();
+        public bool CanUserRequestAds()
+        {
+            if (config.UseLocalConsent) return localConsentManager.CanUserRequestAds();
+            return consentManager.CanUserRequestAds();
+        }
 
         /// <summary>"Personalized" | "NonPersonalized" | "Unknown".</summary>
-        public string GetConsentType() => consentManager.GetConsentType();
+        public string GetConsentType()
+        {
+            if (config.UseLocalConsent) return localConsentManager.GetConsentType();
+            return consentManager.GetConsentType();
+        }
+
+        /// <summary>
+        /// TESTING ONLY: clear stored consent for BOTH paths. Clearing only the
+        /// active one leaves a tester who flips <c>useLocalConsent</c> looking at a
+        /// stale answer from the other path.
+        /// </summary>
+        public void ResetConsentForTesting()
+        {
+            localConsentManager.ResetConsentForTesting();
+            consentManager.ResetConsentForTesting();
+        }
 
         /// <summary>CCPA/US-state "do not sell or share" opt-out toggle. (For the full CMP US-privacy UI use <c>Consent.ShowCcpaForm()</c>.)</summary>
         public void SetCcpaOptOut(bool optedOut)
@@ -489,14 +594,31 @@ namespace Autech.LevelPlay
             var sb = new System.Text.StringBuilder();
             sb.AppendLine("===== PRIVACY / CONSENT SNAPSHOT =====");
             sb.AppendLine($"Ads enabled: {config.AdsEnabled} | RemoveAds: {config.RemoveAds} | Test mode: {config.IsTestModeActive}");
-            string attTrigger = config.CmpShowIdfaPopup ? "InMobi CMP (shouldDisplayIDFA)"
-                              : config.RequestAttAuthorization ? "app AttManager"
-                              : "none";
+            // Order matters: on the local-consent path the CMP never starts, so
+            // cmpShowIdfaPopup triggers nothing and the app owns the prompt.
+            string attTrigger = "none";
+            if (config.UseLocalConsent || config.RequestAttAuthorization)
+            {
+                attTrigger = "app AttManager";
+            }
+            else if (config.CmpShowIdfaPopup)
+            {
+                attTrigger = "InMobi CMP (shouldDisplayIDFA)";
+            }
             sb.AppendLine($"ATT trigger: {attTrigger}");
             sb.AppendLine($"ATT status: {AttManager.Status} (authorized={AttManager.IsAuthorized})");
             sb.AppendLine($"CCPA opt-out: {config.CcpaOptOut} | COPPA: {config.TagForChildDirectedTreatment}");
-            sb.Append(consentManager.GetConsentDebugSnapshot());
-            sb.AppendLine($"Can request ads: {consentManager.CanUserRequestAds()} | Privacy options available: {consentManager.ShouldShowPrivacyOptionsButton()}");
+            if (config.UseLocalConsent)
+            {
+                sb.AppendLine("Consent source: local form");
+                sb.Append(localConsentManager.GetConsentDebugSnapshot());
+            }
+            else
+            {
+                sb.AppendLine("Consent source: InMobi CMP (IAB TCF)");
+                sb.Append(consentManager.GetConsentDebugSnapshot());
+            }
+            sb.AppendLine($"Can request ads: {CanUserRequestAds()} | Privacy options available: {ShouldShowPrivacyOptionsButton()}");
             sb.Append("=====================================");
             return sb.ToString();
         }

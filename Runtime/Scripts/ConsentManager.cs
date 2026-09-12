@@ -46,6 +46,15 @@ namespace Autech.LevelPlay
         /// <summary>Fired when the stored consent changes (e.g. after the privacy form).</summary>
         public event Action<bool> OnConsentChanged;
 
+        /// <summary>
+        /// True once StartChoice has actually run with the IDFA popup enabled, which
+        /// is the only configuration in which the CMP raises the iOS ATT prompt.
+        /// Every early return in <see cref="InitializeConsentAsync"/> (flow disabled,
+        /// no p-code, plugin missing) leaves this false, so callers can tell "the CMP
+        /// owns the ATT prompt" apart from "nothing is going to prompt at all".
+        /// </summary>
+        public bool DidStartWithIdfaPrompt { get; private set; }
+
         public ConsentManager(AdConfiguration config)
         {
             this.config = config;
@@ -150,6 +159,7 @@ namespace Autech.LevelPlay
             {
                 SetCmpLogLevel(config.IsTestModeActive);
                 StartChoice(config.CmpPCode, config.CmpShowIdfaPopup);
+                DidStartWithIdfaPrompt = config.CmpShowIdfaPopup;
                 await WaitForTcfDataAsync();
                 OnConsentChanged?.Invoke(HasConsentForPurpose(PersonalizationPurposeId));
             }
@@ -192,12 +202,24 @@ namespace Autech.LevelPlay
         /// <summary>TESTING ONLY: clear stored IAB consent so the CMP shows again next launch.</summary>
         public void ResetConsentForTesting()
         {
+            ClearTcfStorage();
+        }
+
+        /// <summary>
+        /// Wipe the IAB TCF values this CMP wrote. Used when the local consent path
+        /// takes over, because the adapters read <c>IABTCF_*</c> straight out of
+        /// native storage: a TC string left over from a previous InMobi build would
+        /// keep saying "consented" and could override a user who has just declined in
+        /// the local form, with nothing in the log to explain it.
+        /// </summary>
+        public void ClearTcfStorage()
+        {
 #if UNITY_ANDROID && !UNITY_EDITOR
             ClearAndroidTcf();
 #elif UNITY_IOS && !UNITY_EDITOR
             ClearIosTcf();
 #else
-            Debug.Log("[Autech.LevelPlay] ResetConsentForTesting is a no-op in the Editor.");
+            Debug.Log("[Autech.LevelPlay] Clearing IABTCF storage is a no-op in the Editor.");
 #endif
         }
 

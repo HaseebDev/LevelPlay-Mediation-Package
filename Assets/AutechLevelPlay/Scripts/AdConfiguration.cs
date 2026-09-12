@@ -107,9 +107,53 @@ namespace Autech.LevelPlay
 
         // Consent / privacy settings
 
-        // Runs the InMobi CMP consent flow on init when true. (Field name kept
-        // for AdMob-package parity; it now gates the CMP rather than a dialog.)
+        // Runs the consent flow on init when true. (Field name kept for
+        // AdMob-package parity; it gates whichever consent path is selected.)
         public bool ShowConsentDialog { get; set; } = true;
+
+        // Collect consent with the package's own local form instead of the InMobi
+        // CMP. OFF by default, so existing projects keep the InMobi path untouched.
+        // The local form is not an IAB TCF CMP and is not Google-certified; it
+        // suits mediation stacks that do not require a certified CMP.
+        public bool UseLocalConsent { get; set; } = false;
+
+        // Local form only: how the two choices start on a first ask. TRUE pre-ticks
+        // them, so the user opts OUT rather than in.
+        //
+        // Know what this costs. GDPR Recital 32 says silence, pre-ticked boxes and
+        // inactivity do not constitute consent, and the CJEU confirmed it in Planet49
+        // (C-673/17). In the EEA/UK a pre-ticked box therefore does not establish the
+        // consent this form exists to collect. It raises opt-in rates everywhere else.
+        // Set deliberately, and consider pairing it with OnlyAskWhereGdprApplies.
+        public bool DefaultChoicesTicked { get; set; } = true;
+
+        // Bump this when the privacy policy or the set of ad partners changes. A
+        // stored answer from an older version stops counting as answered, so the
+        // user is asked again rather than silently carrying consent forward to
+        // something they never agreed to.
+        public int ConsentPolicyVersion { get; set; } = 1;
+
+        // Local path only: ask only where GDPR/UK GDPR applies, resolved from the
+        // device's IP so the answer reflects where the user actually is rather than
+        // what their device is configured to say. Checked once, on the first launch
+        // that needs an answer; never again after they have answered.
+        //
+        // Every failure path asks. A timeout, no network, a blocked endpoint or an
+        // unrecognised reply all fall through to showing the form, because asking
+        // someone who did not need it costs a tap while skipping someone who did is
+        // the actual exposure.
+        public bool OnlyAskWhereGdprApplies { get; set; } = false;
+
+        // Endpoint used for that lookup. Must return the two-letter country code in
+        // a "loc=XX" line; Cloudflare's trace endpoint is the default because it
+        // needs no account or API key and returns plain text. Point it at your own
+        // backend if you would rather not depend on a third party, or clear it to
+        // fall back to the device region.
+        public string GeoLookupUrl { get; set; } = "https://www.cloudflare.com/cdn-cgi/trace";
+
+        // How long to wait for that lookup before giving up and asking anyway. Kept
+        // short because it sits in front of the consent form on first launch.
+        public int GeoLookupTimeoutSeconds { get; set; } = 3;
 
         // InMobi CMP account p-code (from the InMobi CMP portal profile menu).
         // Without it, no consent UI is shown. Drop the leading "p-".

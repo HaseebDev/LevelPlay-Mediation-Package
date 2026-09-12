@@ -64,3 +64,10 @@ Assets/LevelPlay.meta
 # GDPR/IAB-TCF consent dependency; the editable copy in Assets/InMobi is TRACKED
 # and mirrored into Samples~/InMobiCMP at release time (see RELEASING.md). The
 # package detects it on load and offers to import it if missing.
+
+# TMP Essentials: per-project Unity artifact, imported on demand, never package content.
+Assets/TextMesh Pro/
+Assets/TextMesh Pro.meta
+
+# Local preview renders of the consent form (not package content).
+/ConsentPreview/

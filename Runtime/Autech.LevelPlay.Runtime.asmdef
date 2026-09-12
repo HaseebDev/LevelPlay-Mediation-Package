@@ -3,7 +3,8 @@
     "rootNamespace": "Autech.LevelPlay",
     "references": [
         "Unity.LevelPlay",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -17,6 +18,11 @@
             "name": "com.unity.services.levelplay",
             "expression": "8.0.0",
             "define": "LEVELPLAY_INSTALLED"
+        },
+        {
+            "name": "com.unity.services.levelplay",
+            "expression": "9.5.0",
+            "define": "LEVELPLAY_9_5_OR_NEWER"
         },
         {
             "name": "com.unity.inputsystem",

@@ -7,11 +7,21 @@ namespace swap (`Autech.Admob` → `Autech.LevelPlay`) plus new dashboard ids.
 ## What it does
 
 - **Ads**: rewarded / interstitial / banner via LevelPlay mediation (`com.unity.services.levelplay` 8+,
-  built against 9.4.1). Load retry with backoff, auto-reload after close, single-show lock.
-- **Consent (GDPR)**: real **InMobi CMP (Choice)** — Google-certified IAB TCF v2.2, the
-  LevelPlay counterpart to AdMob's Google UMP. The plugin (v2.0.1) is **bundled** and the
-  package prompts to import it on first load; consent (`IABTCF_*`) is written to native
-  storage and consumed by the LevelPlay adapters automatically. See [INSTALL.md](INSTALL.md).
+  built against 9.5.1). Load retry with backoff, auto-reload after close, single-show lock.
+- **Consent (GDPR)**: two interchangeable paths, selected by one toggle.
+  - **InMobi CMP (Choice)**, the default: Google-certified IAB TCF v2.2, the LevelPlay
+    counterpart to AdMob's Google UMP. The plugin (v2.0.1) is **bundled** and the package
+    prompts to import it on first load; consent (`IABTCF_*`) is written to native storage
+    and consumed by the LevelPlay adapters automatically.
+  - **Local consent form**, with `useLocalConsent` ticked: the package's own prompt, no
+    InMobi account or p-code needed. Collects personalised-ads and analytics choices and
+    hands the ads decision to LevelPlay, which forwards it to every mediated adapter.
+    Not an IAB TCF CMP and not Google-certified, so do not use it with AdMob demand.
+
+  See [INSTALL.md](INSTALL.md).
+- **Meta Audience Network**: the package sets Meta's `setAdvertiserTrackingEnabled` from
+  the device's ATT status before LevelPlay init, which Meta requires and no mediation
+  adapter does for you. Safe no-op when the Meta adapter is not in the build.
 - **CCPA / US states**: `AdsManager.Instance.SetCcpaOptOut(bool)` — wire to a
   "Do Not Sell or Share My Personal Information" settings toggle.
 - **COPPA**: `tagForChildDirectedTreatment` flag (leave OFF for general-audience games),
@@ -48,9 +58,11 @@ Or pin a version in `Packages/manifest.json`:
 [GitHub Release](https://github.com/HaseebDev/LevelPlay-Mediation-Package/releases)
 and import it (`Assets → Import Package → Custom Package…`). See `INSTALL.md`.
 
-Requires Unity 2021.3+. The `com.unity.services.levelplay` dependency (Ads Mediation,
-Unity Registry) resolves automatically; the package compiles to a no-op until it is present
-(`LEVELPLAY_INSTALLED` version define).
+Requires **Unity 6** and `com.unity.services.levelplay` **9.5.1+** (Ads Mediation, Unity
+Registry), which resolves automatically; the package compiles to a no-op until it is
+present (`LEVELPLAY_INSTALLED` version define). Using the local consent form also needs
+TMP Essential Resources imported in your project, and the build fails with a clear
+message if it is missing.
 
 ## Quick start
 

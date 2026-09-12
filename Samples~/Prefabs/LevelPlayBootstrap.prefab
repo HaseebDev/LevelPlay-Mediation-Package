@@ -61,6 +61,12 @@ MonoBehaviour:
   testMode: 0
   autoLaunchTestSuite: 0
   showConsentDialog: 1
+  useLocalConsent: 0
+  defaultChoicesTicked: 1
+  consentPolicyVersion: 1
+  onlyAskWhereGdprApplies: 1
+  geoLookupUrl: https://www.cloudflare.com/cdn-cgi/trace
+  geoLookupTimeoutSeconds: 3
   cmpPCode: p-AjqnZCTwP-_0R
   cmpShowIdfaPopup: 1
   requestAttAuthorization: 0

@@ -60,6 +60,45 @@ namespace Autech.LevelPlay
         public static bool IsAuthorized => Status == AttStatus.Authorized;
 
         /// <summary>
+        /// Wait for an ATT prompt raised by something ELSE (the InMobi CMP) to be
+        /// answered, without ever raising one ourselves. Returns as soon as the
+        /// status resolves, or on timeout.
+        ///
+        /// Use this when another component owns the prompt, and
+        /// <see cref="RequestAuthorizationAsync"/> when the app owns it. Calling the
+        /// requesting version on top of a prompt the CMP already raised would issue a
+        /// second requestTrackingAuthorization while the first is in flight, which is
+        /// not documented as safe, and would also raise a prompt in projects where
+        /// the CMP never started.
+        /// </summary>
+        public static async Task<AttStatus> WaitForResolutionAsync()
+        {
+#if UNITY_IOS && !UNITY_EDITOR
+            var status = Status;
+            if (status != AttStatus.NotDetermined)
+            {
+                return status;
+            }
+
+            Debug.Log("[Autech.LevelPlay] Waiting for the ATT prompt raised by the CMP…");
+
+            var elapsed = 0f;
+            while (Status == AttStatus.NotDetermined && elapsed < RequestTimeoutSeconds)
+            {
+                await Task.Delay(PollIntervalMs);
+                elapsed += PollIntervalMs / 1000f;
+            }
+
+            status = Status;
+            Debug.Log($"[Autech.LevelPlay] ATT resolved to: {status}");
+            return status;
+#else
+            await Task.CompletedTask;
+            return AttStatus.NotSupported;
+#endif
+        }
+
+        /// <summary>
         /// Show the ATT prompt if the status is still NotDetermined and await the
         /// user's choice. Returns the final status. No-ops outside iOS devices.
         /// The long timeout covers the app being backgrounded while the system
