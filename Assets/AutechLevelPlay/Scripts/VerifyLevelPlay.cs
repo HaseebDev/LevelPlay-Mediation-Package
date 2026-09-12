@@ -105,7 +105,7 @@ namespace Autech.LevelPlay
                 manager.ShowBanner(true);
             }
 
-            Debug.Log("[Autech.LevelPlay] VerifyLevelPlay bootstrap complete.");
+            AdLog.Info("VerifyLevelPlay bootstrap complete.");
         }
 
         private AdsManagerSettings BuildSettings()

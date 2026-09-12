@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-09-12
+
+### Changed
+- **Diagnostic logging is now compiled out of release builds.** All package logging goes
+  through a new `AdLog` helper whose `Info` and `Warn` carry `[Conditional]` attributes
+  for `UNITY_EDITOR` and `DEVELOPMENT_BUILD`, so a release build removes the call
+  entirely, arguments included. That matters because most messages interpolate a string:
+  a runtime flag would still pay to build every message before discarding it.
+  `Error` and `Exception` are deliberately NOT conditional, because a shipping game that
+  fails silently is far harder to diagnose than one that leaves a line in the device log.
+- **Much deeper tracing on the consent path**, all of it dev-build only: which consent
+  path was chosen, the ATT plan and which component owns the prompt, the settled ATT
+  status before init, the geo lookup endpoint and how long it took, prefab load and
+  instantiation, what the form was seeded with and whether it is answerable and readable,
+  EventSystem creation and which input backend, EventSystem recovery after a scene load,
+  which button was tapped and the resulting decision, and the guard being released.
+
+
 ## [1.2.0] - 2026-09-12
 
 ### Added

@@ -44,7 +44,7 @@ namespace Autech.LevelPlay
                 }
                 catch (System.Exception e)
                 {
-                    Debug.LogWarning($"[Autech.LevelPlay] Meta availability check failed: {e.Message}");
+                    AdLog.Warn($"Meta availability check failed: {e.Message}");
                     return false;
                 }
 #else
@@ -63,6 +63,7 @@ namespace Autech.LevelPlay
 #if UNITY_IOS && !UNITY_EDITOR
             try
             {
+                AdLog.Info($"Meta bridge probe: adapter present={IsPresent}, applying advertiserTrackingEnabled={authorized}.");
                 int applied = 0;
                 if (authorized)
                 {
@@ -75,16 +76,16 @@ namespace Autech.LevelPlay
 
                 if (applied == 1)
                 {
-                    Debug.Log($"[Autech.LevelPlay] Meta advertiserTrackingEnabled={authorized} (applied pre-init).");
+                    AdLog.Info($"Meta advertiserTrackingEnabled={authorized} (applied pre-init).");
                     return true;
                 }
 
-                Debug.Log("[Autech.LevelPlay] Meta Audience Network not present, advertiser-tracking flag skipped.");
+                AdLog.Info("Meta Audience Network not present, advertiser-tracking flag skipped.");
                 return false;
             }
             catch (System.Exception e)
             {
-                Debug.LogWarning($"[Autech.LevelPlay] Failed to set Meta advertiser tracking: {e.Message}");
+                AdLog.Warn($"Failed to set Meta advertiser tracking: {e.Message}");
                 return false;
             }
 #else

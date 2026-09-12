@@ -3,6 +3,9 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using UnityEngine;
+// SecureStorage sits in the global namespace, unlike the rest of the package,
+// so the logger has to be imported explicitly.
+using Autech.LevelPlay;
 
 /// <summary>
 /// Secure storage utility using AES-256-CBC encryption with HMAC integrity verification.
@@ -109,7 +112,7 @@ public static class SecureStorage
 
         if (customSalt == "YourCustomEncryptionKey123")
         {
-            Debug.LogWarning("[SecureStorage] Using default encryption key - change this in production!");
+            AdLog.Warn("[SecureStorage] Using default encryption key - change this in production!");
         }
 
         // Check for path traversal attempts
@@ -136,7 +139,7 @@ public static class SecureStorage
             // Input validation
             if (!ValidateInputs(key, customSalt, out string errorMessage))
             {
-                Debug.LogError($"[SecureStorage] Validation failed: {errorMessage}");
+                AdLog.Error($"[SecureStorage] Validation failed: {errorMessage}");
                 return false;
             }
 
@@ -146,14 +149,14 @@ public static class SecureStorage
 
             if (string.IsNullOrEmpty(encryptedAndSigned))
             {
-                Debug.LogError("[SecureStorage] Encryption failed - no data produced");
+                AdLog.Error("[SecureStorage] Encryption failed - no data produced");
                 return false;
             }
 
             // Check data size limit
             if (encryptedAndSigned.Length > MAX_DATA_SIZE)
             {
-                Debug.LogError("[SecureStorage] Encrypted data exceeds size limit");
+                AdLog.Error("[SecureStorage] Encrypted data exceeds size limit");
                 return false;
             }
 
@@ -164,21 +167,21 @@ public static class SecureStorage
             PlayerPrefs.SetString(key + "_secure", versionedData);
             PlayerPrefs.Save();
 
-            Debug.Log($"[SecureStorage] Successfully saved encrypted value for key: {key}");
+            AdLog.Info($"[SecureStorage] Successfully saved encrypted value for key: {key}");
             return true;
         }
         catch (CryptographicException ex)
         {
             // Don't expose cryptographic details to users, but log for debugging
-            Debug.LogError("[SecureStorage] Cryptographic operation failed");
-            Debug.LogException(ex);
+            AdLog.Error("[SecureStorage] Cryptographic operation failed");
+            AdLog.Exception(ex);
             return false;
         }
         catch (Exception ex)
         {
             // Generic error without details to prevent information leakage
-            Debug.LogError("[SecureStorage] Save operation failed");
-            Debug.LogException(ex);
+            AdLog.Error("[SecureStorage] Save operation failed");
+            AdLog.Exception(ex);
             return false;
         }
     }
@@ -199,7 +202,7 @@ public static class SecureStorage
             // Input validation
             if (!ValidateInputs(key, customSalt, out string errorMessage))
             {
-                Debug.LogWarning($"[SecureStorage] Validation failed: {errorMessage}. Using default value.");
+                AdLog.Warn($"[SecureStorage] Validation failed: {errorMessage}. Using default value.");
                 return defaultValue;
             }
 
@@ -208,15 +211,15 @@ public static class SecureStorage
 
             if (string.IsNullOrEmpty(encryptedData))
             {
-                Debug.Log($"[SecureStorage] No data found for key '{key}', using default value");
+                AdLog.Info($"[SecureStorage] No data found for key '{key}', using default value");
                 return defaultValue;
             }
 
             // Verify version prefix
             if (!encryptedData.StartsWith(VERSION_PREFIX))
             {
-                Debug.LogWarning("[SecureStorage] Data format not recognized - possible legacy data or tampering detected");
-                Debug.LogWarning("[SecureStorage] Use MigrateLegacyData() to manually migrate old XOR-encrypted data");
+                AdLog.Warn("[SecureStorage] Data format not recognized - possible legacy data or tampering detected");
+                AdLog.Warn("[SecureStorage] Use MigrateLegacyData() to manually migrate old XOR-encrypted data");
                 return defaultValue;
             }
 
@@ -228,30 +231,30 @@ public static class SecureStorage
 
             if (decrypted == null)
             {
-                Debug.LogWarning("[SecureStorage] Decryption or integrity verification failed - possible tampering");
+                AdLog.Warn("[SecureStorage] Decryption or integrity verification failed - possible tampering");
                 return defaultValue;
             }
 
             // Parse result
             if (!bool.TryParse(decrypted, out bool result))
             {
-                Debug.LogWarning("[SecureStorage] Invalid data format after decryption");
+                AdLog.Warn("[SecureStorage] Invalid data format after decryption");
                 return defaultValue;
             }
 
-            Debug.Log($"[SecureStorage] Successfully loaded encrypted value for key: {key}");
+            AdLog.Info($"[SecureStorage] Successfully loaded encrypted value for key: {key}");
             return result;
         }
         catch (CryptographicException ex)
         {
-            Debug.LogWarning("[SecureStorage] Decryption failed - data may be corrupted or tampered");
-            Debug.LogException(ex);
+            AdLog.Warn("[SecureStorage] Decryption failed - data may be corrupted or tampered");
+            AdLog.Exception(ex);
             return defaultValue;
         }
         catch (Exception ex)
         {
-            Debug.LogWarning("[SecureStorage] Load operation failed - using default value");
-            Debug.LogException(ex);
+            AdLog.Warn("[SecureStorage] Load operation failed - using default value");
+            AdLog.Exception(ex);
             return defaultValue;
         }
     }
@@ -269,12 +272,12 @@ public static class SecureStorage
     {
         try
         {
-            Debug.LogWarning("[SecureStorage] === LEGACY MIGRATION STARTING ===");
-            Debug.LogWarning("[SecureStorage] This should only run ONCE during app upgrade");
+            AdLog.Warn("[SecureStorage] === LEGACY MIGRATION STARTING ===");
+            AdLog.Warn("[SecureStorage] This should only run ONCE during app upgrade");
 
             if (string.IsNullOrEmpty(legacyXorKey))
             {
-                Debug.LogError("[SecureStorage] Migration failed: XOR key required");
+                AdLog.Error("[SecureStorage] Migration failed: XOR key required");
                 return false;
             }
 
@@ -283,7 +286,7 @@ public static class SecureStorage
 
             if (string.IsNullOrEmpty(oldEncrypted))
             {
-                Debug.Log("[SecureStorage] No legacy data found for migration");
+                AdLog.Info("[SecureStorage] No legacy data found for migration");
                 return false;
             }
 
@@ -299,20 +302,20 @@ public static class SecureStorage
                 PlayerPrefs.DeleteKey(key + "_encrypted");
                 PlayerPrefs.Save();
 
-                Debug.Log($"[SecureStorage] Migration completed successfully for key: {key}");
-                Debug.LogWarning("[SecureStorage] Remove MigrateLegacyData() call from your code now");
+                AdLog.Info($"[SecureStorage] Migration completed successfully for key: {key}");
+                AdLog.Warn("[SecureStorage] Remove MigrateLegacyData() call from your code now");
                 return true;
             }
             else
             {
-                Debug.LogError("[SecureStorage] Migration failed - old data preserved");
+                AdLog.Error("[SecureStorage] Migration failed - old data preserved");
                 return false;
             }
         }
         catch (Exception ex)
         {
-            Debug.LogError("[SecureStorage] Migration failed due to error - old data preserved");
-            Debug.LogException(ex);
+            AdLog.Error("[SecureStorage] Migration failed due to error - old data preserved");
+            AdLog.Exception(ex);
             return false;
         }
     }
@@ -376,7 +379,7 @@ public static class SecureStorage
             // Extract HMAC (last 32 bytes)
             if (fullData.Length < 32)
             {
-                Debug.LogWarning("[SecureStorage] Data too short - possible corruption");
+                AdLog.Warn("[SecureStorage] Data too short - possible corruption");
                 return null;
             }
 
@@ -400,7 +403,7 @@ public static class SecureStorage
                 // Constant-time comparison to prevent timing attacks
                 if (!ConstantTimeEquals(storedHmac, computedHmac))
                 {
-                    Debug.LogWarning("[SecureStorage] HMAC verification failed - data has been tampered with");
+                    AdLog.Warn("[SecureStorage] HMAC verification failed - data has been tampered with");
                     return null;
                 }
             }
@@ -416,7 +419,7 @@ public static class SecureStorage
                 byte[] iv = new byte[aes.BlockSize / 8];
                 if (cipherText.Length < iv.Length)
                 {
-                    Debug.LogWarning("[SecureStorage] Ciphertext too short");
+                    AdLog.Warn("[SecureStorage] Ciphertext too short");
                     return null;
                 }
 
@@ -436,20 +439,20 @@ public static class SecureStorage
         }
         catch (FormatException ex)
         {
-            Debug.LogWarning("[SecureStorage] Invalid data format");
-            Debug.LogException(ex);
+            AdLog.Warn("[SecureStorage] Invalid data format");
+            AdLog.Exception(ex);
             return null;
         }
         catch (CryptographicException ex)
         {
-            Debug.LogWarning("[SecureStorage] Decryption failed");
-            Debug.LogException(ex);
+            AdLog.Warn("[SecureStorage] Decryption failed");
+            AdLog.Exception(ex);
             return null;
         }
         catch (Exception ex)
         {
-            Debug.LogWarning("[SecureStorage] Verification failed");
-            Debug.LogException(ex);
+            AdLog.Warn("[SecureStorage] Verification failed");
+            AdLog.Exception(ex);
             return null;
         }
     }
@@ -530,7 +533,7 @@ public static class SecureStorage
     {
         if (string.IsNullOrWhiteSpace(key))
         {
-            Debug.LogError("[SecureStorage] Invalid key for deletion");
+            AdLog.Error("[SecureStorage] Invalid key for deletion");
             return;
         }
 
@@ -551,7 +554,7 @@ public static class SecureStorage
         if (deleted)
         {
             PlayerPrefs.Save();
-            Debug.Log($"[SecureStorage] Deleted encrypted data for key: {key}");
+            AdLog.Info($"[SecureStorage] Deleted encrypted data for key: {key}");
         }
     }
 

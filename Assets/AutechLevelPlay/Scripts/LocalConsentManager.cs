@@ -144,7 +144,7 @@ namespace Autech.LevelPlay
             catch (Exception e)
             {
                 // Unknown region means ask, because asking is the safe direction.
-                Debug.LogWarning($"[Autech.LevelPlay] Could not read the device region ({e.Message}), asking for consent anyway.");
+                AdLog.Warn($"Could not read the device region ({e.Message}), asking for consent anyway.");
                 return true;
             }
         }
@@ -170,20 +170,24 @@ namespace Autech.LevelPlay
             if (string.IsNullOrEmpty(config.GeoLookupUrl))
             {
                 bool deviceSaysGdpr = IsGdprRegion();
-                Debug.Log($"[Autech.LevelPlay] No geo lookup URL configured, falling back to the device region " +
+                AdLog.Info($"No geo lookup URL configured, falling back to the device region " +
                           $"(isGdprRegion={deviceSaysGdpr}).");
                 return deviceSaysGdpr;
             }
 
+            AdLog.Info($"Resolving GDPR applicability from {config.GeoLookupUrl} " +
+                       $"(timeout {config.GeoLookupTimeoutSeconds}s).");
+            var startedAt = Time.realtimeSinceStartup;
             var country = await LookupCountryAsync();
+            AdLog.Info($"Geo lookup took {(Time.realtimeSinceStartup - startedAt):F2}s.");
             if (string.IsNullOrEmpty(country))
             {
-                Debug.Log("[Autech.LevelPlay] Could not resolve the country, showing the consent form anyway.");
+                AdLog.Info("Could not resolve the country, showing the consent form anyway.");
                 return true;
             }
 
             bool required = GdprRegions.Contains(country);
-            Debug.Log($"[Autech.LevelPlay] Resolved country {country}, GDPR applies={required}.");
+            AdLog.Info($"Resolved country {country}, GDPR applies={required}.");
             return required;
         }
 
@@ -205,7 +209,7 @@ namespace Autech.LevelPlay
 
                 if (request.result != UnityWebRequest.Result.Success)
                 {
-                    Debug.LogWarning($"[Autech.LevelPlay] Geo lookup failed ({request.error}).");
+                    AdLog.Warn($"Geo lookup failed ({request.error}).");
                     return null;
                 }
 
@@ -213,7 +217,7 @@ namespace Autech.LevelPlay
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"[Autech.LevelPlay] Geo lookup threw ({e.Message}).");
+                AdLog.Warn($"Geo lookup threw ({e.Message}).");
                 return null;
             }
             finally
@@ -311,16 +315,20 @@ namespace Autech.LevelPlay
         /// </summary>
         public async Task<bool> InitializeConsentAsync()
         {
+            AdLog.Info($"Local consent starting: showDialog={config.ShowConsentDialog} " +
+                       $"policyVersion={config.ConsentPolicyVersion} regionLimited={config.OnlyAskWhereGdprApplies} " +
+                       $"defaultTicked={config.DefaultChoicesTicked} stored={HasStoredConsent}");
+
             if (!config.ShowConsentDialog)
             {
-                Debug.Log("[Autech.LevelPlay] Consent flow disabled in configuration, skipping local consent form.");
+                AdLog.Info("Consent flow disabled in configuration, skipping local consent form.");
                 OnConsentReady?.Invoke(true);
                 return true;
             }
 
             if (HasStoredConsent)
             {
-                Debug.Log($"[Autech.LevelPlay] Local consent already stored: ads={AdsGranted} analytics={AnalyticsGranted} " +
+                AdLog.Info($"Local consent already stored: ads={AdsGranted} analytics={AnalyticsGranted} " +
                           $"answeredAtUtc={AnsweredAtUtc} policyVersion={AnsweredPolicyVersion}");
                 OnConsentReady?.Invoke(CanUserRequestAds());
                 return true;
@@ -328,7 +336,7 @@ namespace Autech.LevelPlay
 
             if (PlayerPrefs.GetInt(StoredKey, 0) == 1)
             {
-                Debug.Log($"[Autech.LevelPlay] Stored consent was given against policy version {AnsweredPolicyVersion} " +
+                AdLog.Info($"Stored consent was given against policy version {AnsweredPolicyVersion} " +
                           $"but the current version is {config.ConsentPolicyVersion}, so the user will be asked again.");
             }
 
@@ -337,7 +345,7 @@ namespace Autech.LevelPlay
                 // Nothing is stored, so nothing is pushed to the networks either: the
                 // GDPR flag is left untouched rather than set either way, which lets
                 // each network apply its own regional default.
-                Debug.Log("[Autech.LevelPlay] GDPR does not apply to this user, so no consent prompt is shown " +
+                AdLog.Info("GDPR does not apply to this user, so no consent prompt is shown " +
                           "and no GDPR signal is sent.");
                 OnConsentReady?.Invoke(CanUserRequestAds());
                 return true;
@@ -362,7 +370,7 @@ namespace Autech.LevelPlay
         {
             if (isFormShowing)
             {
-                Debug.Log("[Autech.LevelPlay] Consent form already open, ignoring the repeat request.");
+                AdLog.Info("Consent form already open, ignoring the repeat request.");
                 return;
             }
 
@@ -376,11 +384,12 @@ namespace Autech.LevelPlay
             try
             {
                 await ShowFormAsync();
+                AdLog.Info($"Privacy options closed, re-pushing consent: ads={AdsGranted} analytics={AnalyticsGranted}");
                 OnConsentChanged?.Invoke(AdsGranted);
             }
             catch (Exception e)
             {
-                Debug.LogError($"[Autech.LevelPlay] Failed to show the privacy options form: {e}");
+                AdLog.Error($"Failed to show the privacy options form: {e}");
             }
         }
 
@@ -393,21 +402,22 @@ namespace Autech.LevelPlay
             PlayerPrefs.DeleteKey(AnsweredAtKey);
             PlayerPrefs.DeleteKey(PolicyVersionKey);
             PlayerPrefs.Save();
-            Debug.Log("[Autech.LevelPlay] Cleared stored local consent.");
+            AdLog.Info("Cleared stored local consent.");
         }
 
         private async Task ShowFormAsync()
         {
             if (isFormShowing)
             {
-                Debug.LogWarning("[Autech.LevelPlay] A consent form is already open, refusing to stack another.");
+                AdLog.Warn("A consent form is already open, refusing to stack another.");
                 return;
             }
 
+            AdLog.Info($"Loading the consent form prefab from Resources/{FormResourcePath}.");
             var prefab = Resources.Load<LocalConsentForm>(FormResourcePath);
             if (prefab == null)
             {
-                Debug.LogError($"[Autech.LevelPlay] Local consent form prefab '{FormResourcePath}' not found in Resources, " +
+                AdLog.Error($"Local consent form prefab '{FormResourcePath}' not found in Resources, " +
                                "continuing without a prompt.");
                 return;
             }
@@ -418,13 +428,14 @@ namespace Autech.LevelPlay
             {
                 instance = UnityEngine.Object.Instantiate(prefab);
                 UnityEngine.Object.DontDestroyOnLoad(instance.gameObject);
+                AdLog.Info("Consent form instantiated and marked DontDestroyOnLoad.");
 
                 // A form with no buttons wired can never be answered, so waiting on it
                 // would block initialization forever with nothing in the log and no
                 // ads for the whole session. Refuse to wait, and say why.
                 if (!instance.IsAnswerable)
                 {
-                    Debug.LogError("[Autech.LevelPlay] Consent form prefab has neither Accept nor Decline wired, " +
+                    AdLog.Error("Consent form prefab has neither Accept nor Decline wired, " +
                                    "so it can never be answered. Continuing without a prompt.");
                     return;
                 }
@@ -433,7 +444,7 @@ namespace Autech.LevelPlay
                 // asking at all, and it would not be valid consent either.
                 if (!instance.HasReadableText)
                 {
-                    Debug.LogError("[Autech.LevelPlay] Consent form labels cannot render because TextMeshPro is not " +
+                    AdLog.Error("Consent form labels cannot render because TextMeshPro is not " +
                                    "in this project. Import it (Window > TextMeshPro > Import TMP Essential " +
                                    "Resources) to use the local consent form. Continuing without a prompt.");
                     return;
@@ -457,13 +468,16 @@ namespace Autech.LevelPlay
                     completion.TrySetResult(true);
                 });
 
+                AdLog.Info("Waiting for the user to answer the consent form.");
                 await completion.Task;
+                AdLog.Info("Consent form answered.");
             }
             finally
             {
                 // Clear the guard even if something threw, so the form can never be
                 // permanently locked out.
                 isFormShowing = false;
+                AdLog.Info("Consent form closed, guard released.");
                 if (instance != null)
                 {
                     UnityEngine.Object.Destroy(instance.gameObject);
@@ -494,7 +508,7 @@ namespace Autech.LevelPlay
             PlayerPrefs.SetInt(PolicyVersionKey, config.ConsentPolicyVersion);
             PlayerPrefs.Save();
 
-            Debug.Log($"[Autech.LevelPlay] Local consent stored: ads={ads} analytics={analytics} " +
+            AdLog.Info($"Local consent stored: ads={ads} analytics={analytics} " +
                       $"answeredAtUtc={answeredAt} policyVersion={config.ConsentPolicyVersion}");
         }
 

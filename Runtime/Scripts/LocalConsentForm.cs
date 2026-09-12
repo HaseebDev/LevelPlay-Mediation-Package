@@ -126,6 +126,9 @@ namespace Autech.LevelPlay
                 analyticsToggle.isOn = analyticsGranted;
             }
 
+            AdLog.Info($"Consent form presenting: adsSeed={adsGranted} analyticsSeed={analyticsGranted} " +
+                       $"policyLink={!string.IsNullOrEmpty(policyUrl)} answerable={IsAnswerable} readable={HasReadableText}");
+
             EnsureEventSystem();
             gameObject.SetActive(true);
 
@@ -154,6 +157,7 @@ namespace Autech.LevelPlay
                 return;
             }
 
+            AdLog.Info($"Privacy policy link tapped, opening {policyUrl}");
             Application.OpenURL(policyUrl);
         }
 
@@ -195,6 +199,7 @@ namespace Autech.LevelPlay
                 return;
             }
 
+            AdLog.Info("Tearing down the EventSystem the consent form created.");
             Destroy(createdEventSystem);
             createdEventSystem = null;
         }
@@ -210,6 +215,8 @@ namespace Autech.LevelPlay
         {
             if (EventSystem.current == null)
             {
+                AdLog.Warn("The EventSystem the consent form was relying on disappeared, most likely a scene load. " +
+                           "Recovering so the form stays tappable.");
                 EnsureEventSystem();
             }
         }
@@ -231,9 +238,11 @@ namespace Autech.LevelPlay
         {
             if (EventSystem.current != null)
             {
+                AdLog.Info($"Using the existing EventSystem '{EventSystem.current.gameObject.name}'.");
                 return;
             }
 
+            AdLog.Info("No EventSystem in the scene, creating one so the form can be tapped.");
             createdEventSystem = new GameObject("EventSystem", typeof(EventSystem));
 #if ENABLE_INPUT_SYSTEM && INPUTSYSTEM_PACKAGE
             createdEventSystem.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
@@ -241,6 +250,11 @@ namespace Autech.LevelPlay
             createdEventSystem.AddComponent<StandaloneInputModule>();
 #endif
             DontDestroyOnLoad(createdEventSystem);
+#if ENABLE_INPUT_SYSTEM && INPUTSYSTEM_PACKAGE
+            AdLog.Info("Created EventSystem with InputSystemUIInputModule (new Input System backend).");
+#else
+            AdLog.Info("Created EventSystem with StandaloneInputModule (legacy Input Manager backend).");
+#endif
         }
 
         /// <summary>Accept applies whatever the two toggles currently say.</summary>
@@ -258,12 +272,14 @@ namespace Autech.LevelPlay
                 analytics = analyticsToggle.isOn;
             }
 
+            AdLog.Info($"Accept tapped with ads={ads} analytics={analytics}.");
             Submit(ads, analytics);
         }
 
         /// <summary>Decline refuses both, whatever the toggles show.</summary>
         private void HandleDecline()
         {
+            AdLog.Info("Decline tapped, refusing both choices regardless of the toggles.");
             Submit(false, false);
         }
 
@@ -272,6 +288,7 @@ namespace Autech.LevelPlay
             // Lock synchronously the moment the choice lands.
             if (submitted)
             {
+                AdLog.Warn("A second submit reached the consent form and was ignored; it is already answered.");
                 return;
             }
 

@@ -230,7 +230,7 @@ namespace Autech.LevelPlay
         /// <summary>Log current configuration (keys truncated) for debugging.</summary>
         public void LogConfiguration()
         {
-            Debug.Log($"[Autech.LevelPlay] AppKey={Truncate(AppKey)} banner={Truncate(BannerAdUnitId)} " +
+            AdLog.Info($"AppKey={Truncate(AppKey)} banner={Truncate(BannerAdUnitId)} " +
                       $"interstitial={Truncate(InterstitialAdUnitId)} rewarded={Truncate(RewardedAdUnitId)} " +
                       $"removeAds={RemoveAds} testMode={TestMode}(active={IsTestModeActive}) adaptive={UseAdaptiveBanners} " +
                       $"position={BannerPosition} ccpaOptOut={CcpaOptOut} coppa={TagForChildDirectedTreatment}");

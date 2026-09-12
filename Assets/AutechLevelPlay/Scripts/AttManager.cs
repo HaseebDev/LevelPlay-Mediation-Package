@@ -75,12 +75,14 @@ namespace Autech.LevelPlay
         {
 #if UNITY_IOS && !UNITY_EDITOR
             var status = Status;
+            AdLog.Info($"ATT wait requested, current status={status}.");
             if (status != AttStatus.NotDetermined)
             {
+                AdLog.Info($"ATT already resolved, not waiting: {status}");
                 return status;
             }
 
-            Debug.Log("[Autech.LevelPlay] Waiting for the ATT prompt raised by the CMP…");
+            AdLog.Info("Waiting for the ATT prompt raised by the CMP…");
 
             var elapsed = 0f;
             while (Status == AttStatus.NotDetermined && elapsed < RequestTimeoutSeconds)
@@ -90,7 +92,7 @@ namespace Autech.LevelPlay
             }
 
             status = Status;
-            Debug.Log($"[Autech.LevelPlay] ATT resolved to: {status}");
+            AdLog.Info($"ATT resolved to: {status}");
             return status;
 #else
             await Task.CompletedTask;
@@ -109,13 +111,14 @@ namespace Autech.LevelPlay
         {
 #if UNITY_IOS && !UNITY_EDITOR
             var status = Status;
+            AdLog.Info($"ATT requested by the app, current status={status}.");
             if (status != AttStatus.NotDetermined)
             {
-                Debug.Log($"[Autech.LevelPlay] ATT already resolved: {status}");
+                AdLog.Info($"ATT already resolved: {status}");
                 return status;
             }
 
-            Debug.Log("[Autech.LevelPlay] Requesting ATT authorization…");
+            AdLog.Info("Requesting ATT authorization…");
             _autechAttRequest();
 
             var elapsed = 0f;
@@ -126,7 +129,7 @@ namespace Autech.LevelPlay
             }
 
             status = Status;
-            Debug.Log($"[Autech.LevelPlay] ATT result: {status}");
+            AdLog.Info($"ATT result: {status}");
             return status;
 #else
             await Task.CompletedTask;

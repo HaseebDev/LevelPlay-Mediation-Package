@@ -129,7 +129,7 @@ namespace Autech.LevelPlay
 
         private void HandleLoadFailed(LevelPlayAdError error)
         {
-            Debug.LogWarning($"[Autech.LevelPlay] Banner load failed: {error}");
+            AdLog.Warn($"Banner load failed: {error}");
             isLoaded = false;
         }
 

@@ -57,7 +57,7 @@ namespace Autech.LevelPlay
         {
             if (!IsReady)
             {
-                Debug.LogWarning("[Autech.LevelPlay] Rewarded ad not ready.");
+                AdLog.Warn("Rewarded ad not ready.");
                 onFailure?.Invoke();
                 LoadAd();
                 return;
@@ -83,13 +83,13 @@ namespace Autech.LevelPlay
 
         private void HandleLoadFailed(LevelPlayAdError error)
         {
-            Debug.LogWarning($"[Autech.LevelPlay] Rewarded load failed: {error}");
+            AdLog.Warn($"Rewarded load failed: {error}");
             _ = RetryLoadAsync();
         }
 
         private void HandleDisplayFailed(LevelPlayAdInfo info, LevelPlayAdError error)
         {
-            Debug.LogWarning($"[Autech.LevelPlay] Rewarded display failed: {error}");
+            AdLog.Warn($"Rewarded display failed: {error}");
             var onFailure = pendingOnFailure;
             ClearPendingCallbacks();
             onFailure?.Invoke();
@@ -126,7 +126,7 @@ namespace Autech.LevelPlay
         {
             if (retryAttempt >= MaxRetryAttempts)
             {
-                Debug.LogWarning("[Autech.LevelPlay] Rewarded retry budget exhausted.");
+                AdLog.Warn("Rewarded retry budget exhausted.");
                 return;
             }
 

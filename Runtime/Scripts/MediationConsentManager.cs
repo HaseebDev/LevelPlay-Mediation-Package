@@ -48,13 +48,13 @@ namespace Autech.LevelPlay
                     return;
                 }
 
-                Debug.Log("[Autech.LevelPlay] Mediation consent applied: " +
+                AdLog.Info("Mediation consent applied: " +
                           $"gdprApplies={consent.GdprApplies()} consentType={consent.GetConsentType()} " +
                           $"(GDPR via IAB TCF) ccpaOptOut={config.CcpaOptOut} coppa={config.TagForChildDirectedTreatment}");
             }
             catch (Exception e)
             {
-                Debug.LogError($"[Autech.LevelPlay] Failed to apply mediation consent: {e.Message}");
+                AdLog.Error($"Failed to apply mediation consent: {e.Message}");
             }
         }
 
@@ -85,7 +85,7 @@ namespace Autech.LevelPlay
             // the GDPR flag untouched in the same situation, so match it.
             if (!localConsent.HasStoredConsent)
             {
-                Debug.Log("[Autech.LevelPlay] No local consent answer stored, leaving the GDPR flag untouched " +
+                AdLog.Info("No local consent answer stored, leaving the GDPR flag untouched " +
                           $"(ccpaOptOut={config.CcpaOptOut} coppa={config.TagForChildDirectedTreatment} still applied).");
                 return;
             }
@@ -100,7 +100,7 @@ namespace Autech.LevelPlay
 #pragma warning restore CS0618
 #endif
 
-            Debug.Log("[Autech.LevelPlay] Mediation consent applied: " +
+            AdLog.Info("Mediation consent applied: " +
                       $"consentType={localConsent.GetConsentType()} (GDPR via local consent, forwarded to all adapters) " +
                       $"ccpaOptOut={config.CcpaOptOut} coppa={config.TagForChildDirectedTreatment}");
         }

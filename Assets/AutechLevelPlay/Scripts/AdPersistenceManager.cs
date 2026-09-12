@@ -68,14 +68,14 @@ namespace Autech.LevelPlay
         {
             if (string.IsNullOrWhiteSpace(customKey))
             {
-                Debug.LogError("[AdPersistenceManager] Cannot set empty encryption key");
+                AdLog.Error("[AdPersistenceManager] Cannot set empty encryption key");
                 return;
             }
 
             if (customKey.Length < 32)
             {
-                Debug.LogWarning("[AdPersistenceManager] Encryption key should be at least 32 characters for AES-256 security");
-                Debug.LogWarning("[AdPersistenceManager] Current length: " + customKey.Length);
+                AdLog.Warn("[AdPersistenceManager] Encryption key should be at least 32 characters for AES-256 security");
+                AdLog.Warn("[AdPersistenceManager] Current length: " + customKey.Length);
             }
 
             // Check if key is being changed after initialization (potential data loss)
@@ -87,16 +87,16 @@ namespace Autech.LevelPlay
             {
                 if (hasEncryptedData)
                 {
-                    Debug.LogError("========================================");
-                    Debug.LogError("[AdPersistenceManager] ⚠️ ENCRYPTION KEY CHANGED ⚠️");
-                    Debug.LogError("[AdPersistenceManager] Previously encrypted data will be UNREADABLE!");
-                    Debug.LogError("[AdPersistenceManager] Users will LOSE their RemoveAds status!");
-                    Debug.LogError("[AdPersistenceManager] Ensure this is intentional and handle data migration!");
-                    Debug.LogError("========================================");
+                    AdLog.Error("========================================");
+                    AdLog.Error("[AdPersistenceManager] ⚠️ ENCRYPTION KEY CHANGED ⚠️");
+                    AdLog.Error("[AdPersistenceManager] Previously encrypted data will be UNREADABLE!");
+                    AdLog.Error("[AdPersistenceManager] Users will LOSE their RemoveAds status!");
+                    AdLog.Error("[AdPersistenceManager] Ensure this is intentional and handle data migration!");
+                    AdLog.Error("========================================");
                 }
                 else
                 {
-                    Debug.LogWarning("[AdPersistenceManager] Encryption key changed before encrypted data was stored. Set LegacyXorKey if migrating older data.");
+                    AdLog.Warn("[AdPersistenceManager] Encryption key changed before encrypted data was stored. Set LegacyXorKey if migrating older data.");
                 }
             }
 
@@ -106,7 +106,7 @@ namespace Autech.LevelPlay
                 // Preserve previous key so developers can migrate legacy data if required
                 legacyXorKey = previousKey;
             }
-            Debug.Log("[AdPersistenceManager] Custom encryption key set");
+            AdLog.Info("[AdPersistenceManager] Custom encryption key set");
         }
 
         /// <summary>
@@ -138,13 +138,13 @@ namespace Autech.LevelPlay
                 // Fallback if deviceId is empty or unavailable
                 if (string.IsNullOrEmpty(deviceId))
                 {
-                    Debug.LogWarning("[AdPersistenceManager] deviceUniqueIdentifier not available, using privacy-safe fallback");
+                    AdLog.Warn("[AdPersistenceManager] deviceUniqueIdentifier not available, using privacy-safe fallback");
                     deviceId = GenerateFallbackDeviceId();
                 }
             }
             catch (System.Exception ex)
             {
-                Debug.LogWarning($"[AdPersistenceManager] Failed to get deviceUniqueIdentifier: {ex.Message}. Using privacy-safe fallback.");
+                AdLog.Warn($"[AdPersistenceManager] Failed to get deviceUniqueIdentifier: {ex.Message}. Using privacy-safe fallback.");
                 deviceId = GenerateFallbackDeviceId();
             }
 
@@ -165,7 +165,7 @@ namespace Autech.LevelPlay
             PlayerPrefs.SetString(FallbackDeviceIdPrefKey, generatedGuid);
             PlayerPrefs.Save();
 
-            Debug.LogWarning("[AdPersistenceManager] Generated persistent fallback device identifier. Ensure Remove Ads purchases can be restored via your IAP flow.");
+            AdLog.Warn("[AdPersistenceManager] Generated persistent fallback device identifier. Ensure Remove Ads purchases can be restored via your IAP flow.");
             return generatedGuid;
         }
 
@@ -188,12 +188,12 @@ namespace Autech.LevelPlay
                 }
 
                 OnRemoveAdsLoadedFromStorage?.Invoke(savedValue);
-                Debug.Log($"[AdPersistenceManager] Loaded Remove Ads status: {savedValue}");
+                AdLog.Info($"[AdPersistenceManager] Loaded Remove Ads status: {savedValue}");
             }
             catch (System.Exception ex)
             {
-                Debug.LogError($"[AdPersistenceManager] Failed to load Remove Ads status: {ex.Message}");
-                Debug.LogException(ex);
+                AdLog.Error($"[AdPersistenceManager] Failed to load Remove Ads status: {ex.Message}");
+                AdLog.Exception(ex);
                 savedValue = false; // Safe default - don't give free RemoveAds on error
                 OnRemoveAdsLoadedFromStorage?.Invoke(false);
             }
@@ -219,12 +219,12 @@ namespace Autech.LevelPlay
                     PlayerPrefs.Save();
                 }
 
-                Debug.Log($"[AdPersistenceManager] Saved Remove Ads status: {value}");
+                AdLog.Info($"[AdPersistenceManager] Saved Remove Ads status: {value}");
             }
             catch (System.Exception ex)
             {
-                Debug.LogError($"[AdPersistenceManager] Failed to save Remove Ads status: {ex.Message}");
-                Debug.LogException(ex);
+                AdLog.Error($"[AdPersistenceManager] Failed to save Remove Ads status: {ex.Message}");
+                AdLog.Exception(ex);
                 throw; // Re-throw so caller knows save failed (important for IAP)
             }
         }
@@ -243,12 +243,12 @@ namespace Autech.LevelPlay
                     PlayerPrefs.Save();
                 }
 
-                Debug.Log("[AdPersistenceManager] Remove Ads data cleared");
+                AdLog.Info("[AdPersistenceManager] Remove Ads data cleared");
             }
             catch (System.Exception ex)
             {
-                Debug.LogError($"[AdPersistenceManager] Failed to clear Remove Ads data: {ex.Message}");
-                Debug.LogException(ex);
+                AdLog.Error($"[AdPersistenceManager] Failed to clear Remove Ads data: {ex.Message}");
+                AdLog.Exception(ex);
             }
         }
 
@@ -267,8 +267,8 @@ namespace Autech.LevelPlay
             }
             catch (System.Exception ex)
             {
-                Debug.LogError($"[AdPersistenceManager] Failed to check Remove Ads data: {ex.Message}");
-                Debug.LogException(ex);
+                AdLog.Error($"[AdPersistenceManager] Failed to check Remove Ads data: {ex.Message}");
+                AdLog.Exception(ex);
                 return false; // Safe default
             }
         }
@@ -277,22 +277,22 @@ namespace Autech.LevelPlay
         {
             if (!useEncryptedStorage)
             {
-                Debug.Log("[AdPersistenceManager] Encryption not enabled - migration not needed");
+                AdLog.Info("[AdPersistenceManager] Encryption not enabled - migration not needed");
                 return true;
             }
 
             if (!SecureStorage.HasLegacyData(removeAdsKey))
             {
-                Debug.Log("[AdPersistenceManager] No legacy data found");
+                AdLog.Info("[AdPersistenceManager] No legacy data found");
                 return true;
             }
 
-            Debug.LogWarning("[AdPersistenceManager] Migrating legacy data...");
+            AdLog.Warn("[AdPersistenceManager] Migrating legacy data...");
 
             string xorKeyToUse = !string.IsNullOrEmpty(legacyXorKey) ? legacyXorKey : encryptionKey;
             if (string.IsNullOrEmpty(xorKeyToUse))
             {
-                Debug.LogError("[AdPersistenceManager] Migration failed: Legacy XOR key not provided.");
+                AdLog.Error("[AdPersistenceManager] Migration failed: Legacy XOR key not provided.");
                 return false;
             }
 
@@ -300,11 +300,11 @@ namespace Autech.LevelPlay
 
             if (success)
             {
-                Debug.LogWarning("[AdPersistenceManager] Migration completed successfully");
+                AdLog.Warn("[AdPersistenceManager] Migration completed successfully");
             }
             else
             {
-                Debug.LogError("[AdPersistenceManager] Migration failed");
+                AdLog.Error("[AdPersistenceManager] Migration failed");
             }
 
             return success;
@@ -317,23 +317,23 @@ namespace Autech.LevelPlay
 
         public void LogEncryptionInfo()
         {
-            Debug.Log("=== [AdPersistenceManager] ENCRYPTION INFO ===");
-            Debug.Log($"Encrypted Storage Enabled: {useEncryptedStorage}");
-            Debug.Log($"Has Stored Data: {HasRemoveAdsDataInStorage()}");
+            AdLog.Info("=== [AdPersistenceManager] ENCRYPTION INFO ===");
+            AdLog.Info($"Encrypted Storage Enabled: {useEncryptedStorage}");
+            AdLog.Info($"Has Stored Data: {HasRemoveAdsDataInStorage()}");
 
             if (useEncryptedStorage)
             {
-                Debug.Log($"Encryption Method: AES-256-CBC");
-                Debug.Log($"{SecureStorage.GetEncryptionInfo()}");
-                Debug.Log("Using device-unique encryption key");
+                AdLog.Info($"Encryption Method: AES-256-CBC");
+                AdLog.Info($"{SecureStorage.GetEncryptionInfo()}");
+                AdLog.Info("Using device-unique encryption key");
             }
             else
             {
-                Debug.Log("Encryption Method: None");
-                Debug.LogWarning("WARNING: Data is not encrypted!");
+                AdLog.Info("Encryption Method: None");
+                AdLog.Warn("WARNING: Data is not encrypted!");
             }
 
-            Debug.Log("=======================================");
+            AdLog.Info("=======================================");
         }
     }
 }

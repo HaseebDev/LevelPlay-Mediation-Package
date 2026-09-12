@@ -134,14 +134,14 @@ namespace Autech.LevelPlay
         {
             if (!config.ShowConsentDialog)
             {
-                Debug.Log("[Autech.LevelPlay] Consent flow disabled in configuration — skipping CMP.");
+                AdLog.Info("Consent flow disabled in configuration — skipping CMP.");
                 OnConsentReady?.Invoke(true);
                 return true;
             }
 
             if (string.IsNullOrEmpty(config.CmpPCode))
             {
-                Debug.LogWarning("[Autech.LevelPlay] No InMobi CMP p-code configured — consent UI will NOT be shown. " +
+                AdLog.Warn("No InMobi CMP p-code configured — consent UI will NOT be shown. " +
                                  "Set it on VerifyLevelPlay (Consent) before shipping to GDPR regions.");
                 OnConsentReady?.Invoke(true);
                 return true;
@@ -149,7 +149,7 @@ namespace Autech.LevelPlay
 
             if (!IsCmpAvailable)
             {
-                Debug.LogWarning("[Autech.LevelPlay] InMobi CMP plugin not found (ChoiceCMP missing). Import the " +
+                AdLog.Warn("InMobi CMP plugin not found (ChoiceCMP missing). Import the " +
                                  "InMobi CMP Unity plugin — see INSTALL.md. Continuing without a consent prompt.");
                 OnConsentReady?.Invoke(true);
                 return true;
@@ -165,7 +165,7 @@ namespace Autech.LevelPlay
             }
             catch (Exception e)
             {
-                Debug.LogError($"[Autech.LevelPlay] InMobi CMP start failed: {e.Message}");
+                AdLog.Error($"InMobi CMP start failed: {e.Message}");
             }
 
             OnConsentReady?.Invoke(CanUserRequestAds());
@@ -177,7 +177,7 @@ namespace Autech.LevelPlay
         {
             if (!IsCmpAvailable)
             {
-                Debug.LogWarning("[Autech.LevelPlay] Cannot show privacy options — InMobi CMP plugin not present.");
+                AdLog.Warn("Cannot show privacy options — InMobi CMP plugin not present.");
                 return;
             }
             try
@@ -187,7 +187,7 @@ namespace Autech.LevelPlay
             }
             catch (Exception e)
             {
-                Debug.LogError($"[Autech.LevelPlay] ForceDisplayUI failed: {e.Message}");
+                AdLog.Error($"ForceDisplayUI failed: {e.Message}");
             }
         }
 
@@ -196,7 +196,7 @@ namespace Autech.LevelPlay
         {
             if (!IsCmpAvailable) return;
             try { InvokeStatic("ShowCCPA"); }
-            catch (Exception e) { Debug.LogError($"[Autech.LevelPlay] ShowCCPA failed: {e.Message}"); }
+            catch (Exception e) { AdLog.Error($"ShowCCPA failed: {e.Message}"); }
         }
 
         /// <summary>TESTING ONLY: clear stored IAB consent so the CMP shows again next launch.</summary>
@@ -219,7 +219,7 @@ namespace Autech.LevelPlay
 #elif UNITY_IOS && !UNITY_EDITOR
             ClearIosTcf();
 #else
-            Debug.Log("[Autech.LevelPlay] Clearing IABTCF storage is a no-op in the Editor.");
+            AdLog.Info("Clearing IABTCF storage is a no-op in the Editor.");
 #endif
         }
 
@@ -234,7 +234,7 @@ namespace Autech.LevelPlay
                 await Task.Delay(TcfPollIntervalMs);
                 elapsed += TcfPollIntervalMs;
             }
-            Debug.LogWarning($"[Autech.LevelPlay] TCF data not available after {TcfDataTimeoutMs}ms — continuing (user may not be in a GDPR region).");
+            AdLog.Warn($"TCF data not available after {TcfDataTimeoutMs}ms — continuing (user may not be in a GDPR region).");
 #else
             await Task.CompletedTask;
 #endif
@@ -316,7 +316,7 @@ namespace Autech.LevelPlay
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"[Autech.LevelPlay] Android pref read '{key}' failed: {e.Message}");
+                AdLog.Warn($"Android pref read '{key}' failed: {e.Message}");
                 return defaultValue;
             }
         }
@@ -336,9 +336,9 @@ namespace Autech.LevelPlay
                         editor.Call<AndroidJavaObject>("remove", k);
                     editor.Call("apply");
                 }
-                Debug.Log("[Autech.LevelPlay] Cleared Android IABTCF data.");
+                AdLog.Info("Cleared Android IABTCF data.");
             }
-            catch (Exception e) { Debug.LogError($"[Autech.LevelPlay] Clear Android TCF failed: {e.Message}"); }
+            catch (Exception e) { AdLog.Error($"Clear Android TCF failed: {e.Message}"); }
         }
 #endif
 
@@ -354,7 +354,7 @@ namespace Autech.LevelPlay
             try { return _GetUserDefault(key, defaultValue); }
             catch (Exception e)
             {
-                Debug.LogWarning($"[Autech.LevelPlay] iOS default read '{key}' failed: {e.Message}");
+                AdLog.Warn($"iOS default read '{key}' failed: {e.Message}");
                 return defaultValue;
             }
         }
@@ -363,7 +363,7 @@ namespace Autech.LevelPlay
         {
             foreach (var k in new[] { TcfStringKey, TcfPurposeConsentsKey, TcfGdprAppliesKey })
                 _RemoveUserDefault(k);
-            Debug.Log("[Autech.LevelPlay] Cleared iOS IABTCF data.");
+            AdLog.Info("Cleared iOS IABTCF data.");
         }
 #endif
 

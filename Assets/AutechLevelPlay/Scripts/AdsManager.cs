@@ -202,7 +202,7 @@ namespace Autech.LevelPlay
         {
             if (isInitialized || isInitializing)
             {
-                Debug.Log("[Autech.LevelPlay] InitializeAsync skipped (already initialized/initializing).");
+                AdLog.Info("InitializeAsync skipped (already initialized/initializing).");
                 return;
             }
 
@@ -212,7 +212,7 @@ namespace Autech.LevelPlay
             {
                 if (!config.AdsEnabled)
                 {
-                    Debug.Log("[Autech.LevelPlay] Ads disabled by configuration — skipping consent, ATT, and SDK init.");
+                    AdLog.Info("Ads disabled by configuration — skipping consent, ATT, and SDK init.");
                     return;
                 }
 
@@ -222,7 +222,7 @@ namespace Autech.LevelPlay
                 // running as an "iPad app on Mac" always runs ad-free.
                 if (UnityEngine.iOS.Device.iosAppOnMac)
                 {
-                    Debug.Log("[Autech.LevelPlay] iOS app running on Mac — ads disabled (LevelPlay supports iOS/Android only).");
+                    AdLog.Info("iOS app running on Mac — ads disabled (LevelPlay supports iOS/Android only).");
                     return;
                 }
 #endif
@@ -234,6 +234,8 @@ namespace Autech.LevelPlay
 
                 // 1. Consent BEFORE init: LevelPlay wants CCPA/COPPA flags pre-init,
                 //    and GDPR consent must exist before any personalized request.
+                AdLog.Info($"Consent path: {(config.UseLocalConsent ? "local form" : "InMobi CMP")}.");
+
                 if (config.UseLocalConsent)
                 {
                     // The adapters read IABTCF_* straight out of native storage. A TC
@@ -277,6 +279,10 @@ namespace Autech.LevelPlay
                                 && config.CmpShowIdfaPopup
                                 && consentManager.DidStartWithIdfaPrompt;
 
+                AdLog.Info($"ATT plan: byApp={attByApp} byCmp={attByCmp} " +
+                           $"(requestAtt={config.RequestAttAuthorization} localConsent={config.UseLocalConsent} " +
+                           $"cmpIdfa={config.CmpShowIdfaPopup} cmpStarted={consentManager.DidStartWithIdfaPrompt}).");
+
                 if (attByApp)
                 {
                     await AttManager.RequestAuthorizationAsync();
@@ -285,6 +291,12 @@ namespace Autech.LevelPlay
                 {
                     await AttManager.WaitForResolutionAsync();
                 }
+                else
+                {
+                    AdLog.Info("No ATT trigger configured, skipping the prompt entirely.");
+                }
+
+                AdLog.Info($"ATT settled at {AttManager.Status} before init.");
 
                 // 3. Meta Audience Network requires its advertiser-tracking flag
                 //    BEFORE LevelPlay init, and no adapter derives it from the ATT
@@ -293,7 +305,7 @@ namespace Autech.LevelPlay
 
                 if (!config.HasAppKey)
                 {
-                    Debug.LogError("[Autech.LevelPlay] No LevelPlay app key configured for this platform — init aborted.");
+                    AdLog.Error("No LevelPlay app key configured for this platform — init aborted.");
                     return;
                 }
 
@@ -324,7 +336,7 @@ namespace Autech.LevelPlay
                 {
                     LevelPlaySdk.OnInitSuccess -= onSuccess;
                     LevelPlaySdk.OnInitFailed -= onFailure;
-                    Debug.LogError($"[Autech.LevelPlay] LevelPlay init failed: {error}");
+                    AdLog.Error($"LevelPlay init failed: {error}");
                     initCompletion.TrySetResult(false);
                 };
 
@@ -339,7 +351,7 @@ namespace Autech.LevelPlay
                 CreateControllersAndLoad();
 
                 isInitialized = true;
-                Debug.Log("[Autech.LevelPlay] Initialized.");
+                AdLog.Info("Initialized.");
 
                 if (config.IsTestModeActive)
                 {
@@ -351,7 +363,7 @@ namespace Autech.LevelPlay
                     }
                     else
                     {
-                        Debug.Log("[Autech.LevelPlay] Test mode ACTIVE — integration test suite is enabled but not auto-launched. " +
+                        AdLog.Info("Test mode ACTIVE — integration test suite is enabled but not auto-launched. " +
                                   "Call AdsManager.Instance.LaunchTestSuite() (or the VerifyLevelPlay 'Launch Test Suite' context menu) to open it.");
                     }
                 }
@@ -396,7 +408,7 @@ namespace Autech.LevelPlay
         {
             if (show && config.RemoveAds)
             {
-                Debug.Log("[Autech.LevelPlay] Banner suppressed (RemoveAds active).");
+                AdLog.Info("Banner suppressed (RemoveAds active).");
                 return;
             }
 
@@ -425,7 +437,7 @@ namespace Autech.LevelPlay
         {
             if (config.RemoveAds)
             {
-                Debug.Log("[Autech.LevelPlay] Interstitial suppressed (RemoveAds active).");
+                AdLog.Info("Interstitial suppressed (RemoveAds active).");
                 onSuccess?.Invoke();
                 return;
             }
@@ -498,7 +510,7 @@ namespace Autech.LevelPlay
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError($"[Autech.LevelPlay] Failed to persist RemoveAds: {e.Message}");
+                    AdLog.Error($"Failed to persist RemoveAds: {e.Message}");
                 }
 
                 if (value)
@@ -663,12 +675,12 @@ namespace Autech.LevelPlay
         {
             if (!config.IsTestModeActive)
             {
-                Debug.LogWarning("[Autech.LevelPlay] LaunchTestSuite ignored — test mode is OFF. " +
+                AdLog.Warn("LaunchTestSuite ignored — test mode is OFF. " +
                                  "Set TestMode to AlwaysOn (or make a Development Build) so the test-suite metadata is enabled before init.");
                 return;
             }
 
-            Debug.Log("[Autech.LevelPlay] Launching LevelPlay integration test suite.");
+            AdLog.Info("Launching LevelPlay integration test suite.");
             LevelPlaySdk.LaunchTestSuite();
         }
 
@@ -677,7 +689,7 @@ namespace Autech.LevelPlay
         private void LogTestModeBanner()
         {
             string reason = Debug.isDebugBuild ? "Development build / Editor" : "forced (TestMode = AlwaysOn)";
-            Debug.Log(
+            AdLog.Info(
                 "\n========================= AUTECH LEVELPLAY: TEST MODE ACTIVE =========================\n" +
                 $"Reason: {reason}. Integration test suite ENABLED. DO NOT ship a build in this state.\n" +
                 "To get TEST ads at your real in-game trigger points (banner/interstitial/rewarded Show calls),\n" +
@@ -700,25 +712,25 @@ namespace Autech.LevelPlay
                     {
                         if (!string.IsNullOrEmpty(advertisingId))
                         {
-                            Debug.Log($"[Autech.LevelPlay] *** TEST DEVICE ADVERTISING ID: {advertisingId} *** " +
+                            AdLog.Info($"*** TEST DEVICE ADVERTISING ID: {advertisingId} *** " +
                                       $"(tracking enabled: {trackingEnabled}). Add it to the LevelPlay dashboard test-device list.");
                         }
                         else
                         {
-                            Debug.Log($"[Autech.LevelPlay] Advertising ID unavailable ({error}). " +
+                            AdLog.Info($"Advertising ID unavailable ({error}). " +
                                       "Launch the test suite — its header shows the advertising ID to register as a test device.");
                         }
                     });
 
                 if (!requested)
                 {
-                    Debug.Log("[Autech.LevelPlay] Advertising ID lookup not supported on this platform/Editor. " +
+                    AdLog.Info("Advertising ID lookup not supported on this platform/Editor. " +
                               "Launch the test suite (its header shows the advertising ID) to register this device.");
                 }
             }
             catch (Exception e)
             {
-                Debug.Log($"[Autech.LevelPlay] Advertising ID lookup failed ({e.Message}). " +
+                AdLog.Info($"Advertising ID lookup failed ({e.Message}). " +
                           "Launch the test suite to read the advertising ID and register this device.");
             }
         }
@@ -730,7 +742,7 @@ namespace Autech.LevelPlay
         public void LogDebugStatus()
         {
             config.LogConfiguration();
-            Debug.Log($"[Autech.LevelPlay] init={isInitialized} showing={isShowingAd} " +
+            AdLog.Info($"init={isInitialized} showing={isShowingAd} " +
                       $"rewardedReady={IsRewardedReady()} interstitialReady={IsInterstitialReady()} " +
                       $"bannerVisible={IsBannerVisible()} consent={GetConsentType()} att={AttManager.Status}");
         }

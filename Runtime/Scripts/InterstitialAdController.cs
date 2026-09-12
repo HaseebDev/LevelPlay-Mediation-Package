@@ -44,7 +44,7 @@ namespace Autech.LevelPlay
         {
             if (!IsReady)
             {
-                Debug.LogWarning("[Autech.LevelPlay] Interstitial not ready.");
+                AdLog.Warn("Interstitial not ready.");
                 onFailure?.Invoke();
                 LoadAd();
                 return;
@@ -68,13 +68,13 @@ namespace Autech.LevelPlay
 
         private void HandleLoadFailed(LevelPlayAdError error)
         {
-            Debug.LogWarning($"[Autech.LevelPlay] Interstitial load failed: {error}");
+            AdLog.Warn($"Interstitial load failed: {error}");
             _ = RetryLoadAsync();
         }
 
         private void HandleDisplayFailed(LevelPlayAdInfo info, LevelPlayAdError error)
         {
-            Debug.LogWarning($"[Autech.LevelPlay] Interstitial display failed: {error}");
+            AdLog.Warn($"Interstitial display failed: {error}");
             var onFailure = pendingOnFailure;
             pendingOnSuccess = null;
             pendingOnFailure = null;
@@ -95,7 +95,7 @@ namespace Autech.LevelPlay
         {
             if (retryAttempt >= MaxRetryAttempts)
             {
-                Debug.LogWarning("[Autech.LevelPlay] Interstitial retry budget exhausted.");
+                AdLog.Warn("Interstitial retry budget exhausted.");
                 return;
             }
 
