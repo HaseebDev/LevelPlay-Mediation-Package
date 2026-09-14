@@ -36,6 +36,7 @@ namespace Autech.LevelPlay
                 CreateBanner();
             }
 
+            AdTelemetry.Report(AdTelemetryFormat.Banner, AdTelemetryAction.Request, config.BannerAdUnitId);
             bannerAd.LoadAd();
         }
 
@@ -112,12 +113,16 @@ namespace Autech.LevelPlay
                 .Build();
 
             bannerAd = new LevelPlayBannerAd(config.BannerAdUnitId, bannerConfig);
+            bannerAd.OnAdDisplayed += info => AdTelemetry.Report(AdTelemetryFormat.Banner, AdTelemetryAction.Displayed, config.BannerAdUnitId);
+            bannerAd.OnAdClicked += info => AdTelemetry.Report(AdTelemetryFormat.Banner, AdTelemetryAction.Clicked, config.BannerAdUnitId);
+            bannerAd.OnAdDisplayFailed += (info, error) => AdTelemetry.Report(AdTelemetryFormat.Banner, AdTelemetryAction.DisplayFailed, config.BannerAdUnitId, error.ErrorCode);
             bannerAd.OnAdLoaded += HandleLoaded;
             bannerAd.OnAdLoadFailed += HandleLoadFailed;
         }
 
         private void HandleLoaded(LevelPlayAdInfo info)
         {
+            AdTelemetry.Report(AdTelemetryFormat.Banner, AdTelemetryAction.Loaded, config.BannerAdUnitId);
             isLoaded = true;
             if (showWhenLoaded)
             {
@@ -129,6 +134,7 @@ namespace Autech.LevelPlay
 
         private void HandleLoadFailed(LevelPlayAdError error)
         {
+            AdTelemetry.Report(AdTelemetryFormat.Banner, AdTelemetryAction.LoadFailed, config.BannerAdUnitId, error.ErrorCode);
             AdLog.Warn($"Banner load failed: {error}");
             isLoaded = false;
         }

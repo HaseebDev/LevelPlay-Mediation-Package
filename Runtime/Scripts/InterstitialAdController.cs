@@ -17,6 +17,8 @@ namespace Autech.LevelPlay
         private const float BaseRetryDelaySeconds = 2f;
 
         private readonly LevelPlayInterstitialAd interstitialAd;
+        private readonly string telemetryUnit;
+        private string telemetryPlacement;
 
         private Action pendingOnSuccess;
         private Action pendingOnFailure;
@@ -27,7 +29,10 @@ namespace Autech.LevelPlay
 
         public InterstitialAdController(string adUnitId)
         {
+            telemetryUnit = adUnitId;
             interstitialAd = new LevelPlayInterstitialAd(adUnitId);
+            interstitialAd.OnAdDisplayed += info => AdTelemetry.Report(AdTelemetryFormat.Interstitial, AdTelemetryAction.Displayed, info?.PlacementName ?? telemetryPlacement);
+            interstitialAd.OnAdClicked += info => AdTelemetry.Report(AdTelemetryFormat.Interstitial, AdTelemetryAction.Clicked, info?.PlacementName ?? telemetryPlacement);
             interstitialAd.OnAdLoaded += HandleLoaded;
             interstitialAd.OnAdLoadFailed += HandleLoadFailed;
             interstitialAd.OnAdDisplayFailed += HandleDisplayFailed;
@@ -37,13 +42,16 @@ namespace Autech.LevelPlay
         public void LoadAd()
         {
             CancelRetry();
+            AdTelemetry.Report(AdTelemetryFormat.Interstitial, AdTelemetryAction.Request, telemetryUnit);
             interstitialAd.LoadAd();
         }
 
         public void Show(Action onSuccess, Action onFailure, string placementName = null)
         {
+            telemetryPlacement = placementName ?? telemetryUnit;
             if (!IsReady)
             {
+                AdTelemetry.Report(AdTelemetryFormat.Interstitial, AdTelemetryAction.DisplayFailed, telemetryPlacement);
                 AdLog.Warn("Interstitial not ready.");
                 onFailure?.Invoke();
                 LoadAd();
@@ -63,17 +71,20 @@ namespace Autech.LevelPlay
 
         private void HandleLoaded(LevelPlayAdInfo info)
         {
+            AdTelemetry.Report(AdTelemetryFormat.Interstitial, AdTelemetryAction.Loaded, telemetryUnit);
             retryAttempt = 0;
         }
 
         private void HandleLoadFailed(LevelPlayAdError error)
         {
+            AdTelemetry.Report(AdTelemetryFormat.Interstitial, AdTelemetryAction.LoadFailed, telemetryUnit, error.ErrorCode);
             AdLog.Warn($"Interstitial load failed: {error}");
             _ = RetryLoadAsync();
         }
 
         private void HandleDisplayFailed(LevelPlayAdInfo info, LevelPlayAdError error)
         {
+            AdTelemetry.Report(AdTelemetryFormat.Interstitial, AdTelemetryAction.DisplayFailed, telemetryPlacement, error.ErrorCode);
             AdLog.Warn($"Interstitial display failed: {error}");
             var onFailure = pendingOnFailure;
             pendingOnSuccess = null;
@@ -84,6 +95,7 @@ namespace Autech.LevelPlay
 
         private void HandleClosed(LevelPlayAdInfo info)
         {
+            AdTelemetry.Report(AdTelemetryFormat.Interstitial, AdTelemetryAction.Closed, info?.PlacementName ?? telemetryPlacement);
             var onSuccess = pendingOnSuccess;
             pendingOnSuccess = null;
             pendingOnFailure = null;
@@ -116,6 +128,7 @@ namespace Autech.LevelPlay
 
             if (!token.IsCancellationRequested)
             {
+                AdTelemetry.Report(AdTelemetryFormat.Interstitial, AdTelemetryAction.Request, telemetryUnit);
                 interstitialAd.LoadAd();
             }
         }
