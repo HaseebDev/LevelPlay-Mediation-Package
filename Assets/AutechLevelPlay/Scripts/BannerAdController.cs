@@ -1,4 +1,7 @@
 #if LEVELPLAY_INSTALLED
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using Unity.Services.LevelPlay;
 
@@ -8,15 +11,23 @@ namespace Autech.LevelPlay
     /// Wraps one LevelPlay banner ad unit. Banners auto-refresh; this controller
     /// owns load/show/hide state and exposes size info for safe-area layout
     /// (NotchSafeArea queries IsBannerVisible / GetBannerSize).
+    /// A failed initial load is retried with capped exponential backoff for the whole
+    /// session: auto-refresh only starts after a first successful load, so without a
+    /// retry one no-fill at startup would leave the game without a banner.
     /// </summary>
     public class BannerAdController
     {
+        private const float BaseRetryDelaySeconds = 2f;
+        private const float MaxRetryDelaySeconds = 60f;
+
         private readonly AdConfiguration config;
 
         private LevelPlayBannerAd bannerAd;
         private bool isLoaded;
         private bool isVisible;
         private bool showWhenLoaded;
+        private int retryAttempt;
+        private CancellationTokenSource retryCts;
 
         public bool IsBannerLoaded => isLoaded;
         public bool IsBannerVisible => isVisible;
@@ -36,6 +47,7 @@ namespace Autech.LevelPlay
                 CreateBanner();
             }
 
+            CancelRetry();
             bannerAd.LoadAd();
         }
 
@@ -94,6 +106,8 @@ namespace Autech.LevelPlay
 
         public void DestroyBanner()
         {
+            CancelRetry();
+            retryAttempt = 0;
             if (bannerAd == null) return;
 
             bannerAd.DestroyAd();
@@ -118,6 +132,7 @@ namespace Autech.LevelPlay
 
         private void HandleLoaded(LevelPlayAdInfo info)
         {
+            retryAttempt = 0;
             isLoaded = true;
             if (showWhenLoaded)
             {
@@ -130,7 +145,44 @@ namespace Autech.LevelPlay
         private void HandleLoadFailed(LevelPlayAdError error)
         {
             AdLog.Warn($"Banner load failed: {error}");
+            var wasLoaded = isLoaded;
             isLoaded = false;
+
+            // Once a banner has loaded, LevelPlay's auto-refresh keeps requesting on its own.
+            if (!wasLoaded)
+            {
+                _ = RetryLoadAsync();
+            }
+        }
+
+        private async Task RetryLoadAsync()
+        {
+            retryAttempt++;
+            CancelRetry();
+            retryCts = new CancellationTokenSource();
+            var token = retryCts.Token;
+            var delaySeconds = Mathf.Min(BaseRetryDelaySeconds * Mathf.Pow(2f, retryAttempt - 1), MaxRetryDelaySeconds);
+
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(delaySeconds), token);
+            }
+            catch (TaskCanceledException)
+            {
+                return;
+            }
+
+            if (!token.IsCancellationRequested && bannerAd != null && !isLoaded)
+            {
+                bannerAd.LoadAd();
+            }
+        }
+
+        private void CancelRetry()
+        {
+            retryCts?.Cancel();
+            retryCts?.Dispose();
+            retryCts = null;
         }
 
         private LevelPlayAdSize ResolveSize()

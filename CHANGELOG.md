@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-09-25
+
+### Fixed
+- **Banners now recover from a failed first load.** `BannerAdController` gave up after a
+  single load failure, and LevelPlay's auto-refresh only starts after a first successful
+  load, so one no-fill at startup (common on fresh installs and TestFlight) left the game
+  with no banner for the whole session, even with `showBannerOnStart` on. A failed load
+  before the first success is now retried with exponential backoff (2 s doubling, capped
+  at 60 s) for the rest of the session. The retry resets on a successful load, and is
+  cancelled when the banner is reloaded, repositioned or destroyed.
+
 ## [1.2.1] - 2026-09-12
 
 ### Changed
