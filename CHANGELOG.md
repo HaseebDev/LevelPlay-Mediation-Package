@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-09-26
+
+### Fixed
+- **The app-side ATT prompt was lost if the app was not active when it was requested.**
+  iOS only presents the prompt while the app is active and silently drops a request made
+  otherwise (another system alert on screen, an incoming call, Control Center), leaving
+  the status NotDetermined for the whole session. The request is now armed instead of
+  fired once: it asks only while `applicationState` is active, re-asks on every
+  `UIApplicationDidBecomeActiveNotification` while the status is still NotDetermined,
+  and removes its observer once there is an answer. If the 90 second wait times out,
+  init continues without IDFA as before, but the request stays armed and the prompt
+  appears the next time the app becomes active. Applies to the local consent path and
+  to `requestAttAuthorization`. The InMobi CMP path is unchanged: the CMP raises its
+  own prompt and the package only waits for the answer.
+
 ## [1.2.1] - 2026-09-12
 
 ### Changed

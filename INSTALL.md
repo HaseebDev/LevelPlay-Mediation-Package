@@ -13,7 +13,7 @@ https://github.com/HaseebDev/LevelPlay-Mediation-Package.git
 To pin a specific release, append a tag:
 
 ```
-https://github.com/HaseebDev/LevelPlay-Mediation-Package.git#v1.1.3
+https://github.com/HaseebDev/LevelPlay-Mediation-Package.git#v1.2.2
 ```
 
 …or add it directly to `Packages/manifest.json`:
@@ -21,7 +21,7 @@ https://github.com/HaseebDev/LevelPlay-Mediation-Package.git#v1.1.3
 ```json
 {
   "dependencies": {
-    "com.autech.levelplay-mediation": "https://github.com/HaseebDev/LevelPlay-Mediation-Package.git#v1.1.3"
+    "com.autech.levelplay-mediation": "https://github.com/HaseebDev/LevelPlay-Mediation-Package.git#v1.2.2"
   }
 }
 ```
@@ -142,6 +142,13 @@ On the local path the CMP never starts, so the package presents ATT itself, righ
 after the consent form and before LevelPlay init. You do not need to tick the
 legacy `requestAttAuthorization` box; `useLocalConsent` implies it.
 `NSUserTrackingUsageDescription` is injected at build time accordingly.
+
+iOS only shows the ATT prompt while the app is active and silently drops a request
+made while it is not (a system alert on screen, an incoming call, Control Center).
+The package therefore keeps the request armed: it asks as soon as the app is active,
+and again every time the app returns to active, until the user answers. If nothing is
+answered within 90 seconds, init goes ahead without IDFA, and the prompt still appears
+the next time the app becomes active.
 
 ### How the choices start
 

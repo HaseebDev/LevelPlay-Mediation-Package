@@ -20,15 +20,15 @@ namespace Autech.LevelPlay
     }
 
     /// <summary>
-    /// iOS App Tracking Transparency (ATT) helper. As of the InMobi-CMP-owns-ATT
-    /// change, the ATT prompt is triggered by the InMobi CMP (shouldDisplayIDFA)
-    /// during the consent flow, so this class is primarily a read-only status
-    /// source (<see cref="Status"/>/<see cref="IsAuthorized"/>) used by the debug
-    /// panel. <see cref="RequestAuthorizationAsync"/> remains available as an
-    /// opt-in app-controlled prompt (VerifyLevelPlay → requestAttAuthorization),
-    /// which <see cref="AdsManager"/> awaits before init only when that toggle is on.
-    /// Either way the NSUserTrackingUsageDescription Info.plist entry is injected at
-    /// build time by the package's iOS post-processor.
+    /// iOS App Tracking Transparency (ATT) helper. Who raises the prompt depends on
+    /// the consent path:
+    ///   - InMobi CMP path: the CMP raises it (shouldDisplayIDFA) and
+    ///     <see cref="WaitForResolutionAsync"/> waits for the answer without asking.
+    ///   - Local consent path, or requestAttAuthorization ticked: the app raises it
+    ///     with <see cref="RequestAuthorizationAsync"/>.
+    /// <see cref="AdsManager"/> awaits the relevant one before init. Either way the
+    /// NSUserTrackingUsageDescription Info.plist entry is injected at build time by
+    /// the package's iOS post-processor.
     /// </summary>
     public static class AttManager
     {
@@ -103,9 +103,17 @@ namespace Autech.LevelPlay
         /// <summary>
         /// Show the ATT prompt if the status is still NotDetermined and await the
         /// user's choice. Returns the final status. No-ops outside iOS devices.
-        /// The long timeout covers the app being backgrounded while the system
-        /// dialog is up; on timeout the current (NotDetermined) status returns
-        /// and ads simply run without IDFA.
+        ///
+        /// iOS only presents the prompt while the app is active and silently drops
+        /// a request made while it is not (another system alert on screen, a call,
+        /// Control Center). The native side therefore arms the request instead of
+        /// firing it once: it asks now if the app is active, and again every time
+        /// the app becomes active, until there is an answer. Dismissing whatever
+        /// interrupted brings the prompt up straight away.
+        ///
+        /// On timeout the NotDetermined status returns and ads run without IDFA for
+        /// now, but the request stays armed, so the prompt still appears the next
+        /// time the app becomes active.
         /// </summary>
         public static async Task<AttStatus> RequestAuthorizationAsync()
         {
@@ -118,18 +126,46 @@ namespace Autech.LevelPlay
                 return status;
             }
 
-            AdLog.Info("Requesting ATT authorization…");
+            AdLog.Info("Requesting ATT authorization (armed: re-asked on every return to active until answered)…");
             _autechAttRequest();
 
             var elapsed = 0f;
+            var wasFocused = Application.isFocused;
+            if (!wasFocused)
+            {
+                AdLog.Info("App is not active yet, so iOS will hold the ATT prompt until it is.");
+            }
+
             while (Status == AttStatus.NotDetermined && elapsed < RequestTimeoutSeconds)
             {
                 await Task.Delay(PollIntervalMs);
                 elapsed += PollIntervalMs / 1000f;
+
+                var focused = Application.isFocused;
+                if (focused != wasFocused)
+                {
+                    if (focused)
+                    {
+                        AdLog.Info("App became active while ATT is still undetermined, so the prompt is being asked again.");
+                    }
+                    else
+                    {
+                        AdLog.Info("App lost focus while waiting for ATT; iOS will not show the prompt until it returns.");
+                    }
+                    wasFocused = focused;
+                }
             }
 
             status = Status;
-            AdLog.Info($"ATT result: {status}");
+            if (status == AttStatus.NotDetermined)
+            {
+                AdLog.Warn($"ATT still undetermined after {RequestTimeoutSeconds:F0}s; continuing without IDFA for now. " +
+                           "The request stays armed and the prompt will appear the next time the app becomes active.");
+            }
+            else
+            {
+                AdLog.Info($"ATT result: {status}");
+            }
             return status;
 #else
             await Task.CompletedTask;

@@ -51,7 +51,7 @@ https://github.com/HaseebDev/LevelPlay-Mediation-Package.git
 Or pin a version in `Packages/manifest.json`:
 
 ```json
-"com.autech.levelplay-mediation": "https://github.com/HaseebDev/LevelPlay-Mediation-Package.git#v1.1.4"
+"com.autech.levelplay-mediation": "https://github.com/HaseebDev/LevelPlay-Mediation-Package.git#v1.2.2"
 ```
 
 **Via `.unitypackage`:** download the asset from the latest
