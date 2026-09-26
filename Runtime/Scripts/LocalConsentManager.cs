@@ -22,8 +22,8 @@ namespace Autech.LevelPlay
     /// values and is not Google-certified. It is for mediation stacks that do not
     /// require a certified CMP. Keep using the InMobi path where one is required.
     ///
-    /// The analytics decision is collected and stored only. Nothing in this
-    /// package consumes it yet.
+    /// The analytics decision is exposed through <see cref="AnalyticsAllowed"/>
+    /// for an analytics package to read; this package does not collect analytics.
     /// </summary>
     public class LocalConsentManager
     {
@@ -59,6 +59,13 @@ namespace Autech.LevelPlay
         /// raycasting, and waiting on a task that can never complete.
         /// </summary>
         private bool isFormShowing;
+
+        /// <summary>
+        /// Set this session when the consent flow decided the user does not need to
+        /// be asked: GDPR does not apply to them, or the flow is disabled. Never
+        /// persisted, so it is re-resolved on each launch until the user answers.
+        /// </summary>
+        private bool consentNotRequired;
 
         /// <summary>True while the consent form is on screen.</summary>
         public bool IsFormShowing => isFormShowing;
@@ -260,8 +267,28 @@ namespace Autech.LevelPlay
         /// <summary>The user's personalized-ads decision. False until answered.</summary>
         public bool AdsGranted => PlayerPrefs.GetInt(AdsKey, 0) == 1;
 
-        /// <summary>The user's analytics decision. Stored for a future consumer; unused here.</summary>
+        /// <summary>The user's stored analytics decision. False until answered; read <see cref="AnalyticsAllowed"/> to gate collection.</summary>
         public bool AnalyticsGranted => PlayerPrefs.GetInt(AnalyticsKey, 0) == 1;
+
+        /// <summary>True when this session's consent flow found that the user does not need to be asked.</summary>
+        public bool ConsentNotRequired => consentNotRequired;
+
+        /// <summary>
+        /// Whether analytics may collect. A stored answer always wins, including one
+        /// given later through the privacy options where GDPR does not apply. Without
+        /// one, analytics is on only where consent is not required; an unresolved
+        /// region or an unanswered form keeps it off. A refusal given against an older
+        /// policy version still counts there, so a policy bump never turns it back on.
+        /// </summary>
+        public bool AnalyticsAllowed
+        {
+            get
+            {
+                if (HasStoredConsent) return AnalyticsGranted;
+                if (!consentNotRequired) return false;
+                return PlayerPrefs.GetInt(StoredKey, 0) != 1 || AnalyticsGranted;
+            }
+        }
 
         /// <summary>Ads can always be requested; consent gates personalization, not serving.</summary>
         public bool CanUserRequestAds() => true;
@@ -297,7 +324,7 @@ namespace Autech.LevelPlay
             sb.AppendLine($"  Answered: {HasStoredConsent}");
             sb.AppendLine($"  Consent type: {GetConsentType()}");
             sb.AppendLine($"  Personalized ads: {AdsGranted}");
-            sb.AppendLine($"  Analytics: {AnalyticsGranted} (stored only, no consumer yet)");
+            sb.AppendLine($"  Analytics: {AnalyticsGranted} (allowed now: {AnalyticsAllowed}, consent not required: {consentNotRequired})");
             sb.AppendLine($"  Answered at (UTC): {AnsweredAtUtc}");
             sb.AppendLine($"  Policy version: answered={AnsweredPolicyVersion} current={config.ConsentPolicyVersion}");
             sb.AppendLine($"  Region-limited asking: {config.OnlyAskWhereGdprApplies} (device region says GDPR: {IsGdprRegion()}, resolved by IP at first ask)");
@@ -322,6 +349,7 @@ namespace Autech.LevelPlay
             if (!config.ShowConsentDialog)
             {
                 AdLog.Info("Consent flow disabled in configuration, skipping local consent form.");
+                consentNotRequired = true;
                 OnConsentReady?.Invoke(true);
                 return true;
             }
@@ -346,7 +374,8 @@ namespace Autech.LevelPlay
                 // GDPR flag is left untouched rather than set either way, which lets
                 // each network apply its own regional default.
                 AdLog.Info("GDPR does not apply to this user, so no consent prompt is shown " +
-                          "and no GDPR signal is sent.");
+                          "and no GDPR signal is sent. Analytics defaults to on until the user chooses otherwise.");
+                consentNotRequired = true;
                 OnConsentReady?.Invoke(CanUserRequestAds());
                 return true;
             }

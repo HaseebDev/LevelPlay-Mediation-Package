@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [1.2.4] - 2026-09-26
+
+### Added
+- **`LocalConsentManager.AnalyticsAllowed`**, the single value an analytics package should
+  gate collection on. A stored answer always wins, including one given later through the
+  privacy options. Without one, analytics is allowed only where the consent flow decided the
+  user does not need to be asked (GDPR does not apply, or the flow is disabled); an
+  unresolved region or an unanswered form keeps it off. A refusal given against an older
+  policy version still counts outside GDPR, so bumping the policy never turns it back on.
+- `LocalConsentManager.ConsentNotRequired` reports that decision for the current session.
+  It is not persisted: until the user answers, it is re-resolved on every launch.
+
 ## [1.2.3] - 2026-09-26
 
 ### Added
