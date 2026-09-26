@@ -20,6 +20,9 @@ namespace Autech.LevelPlay
         private const float BaseRetryDelaySeconds = 2f;
 
         private readonly LevelPlayRewardedAd rewardedAd;
+        private readonly string telemetryUnit;
+        private string telemetryPlacement;
+        private bool telemetryRewardPending;
 
         private Action<LevelPlayReward> pendingOnRewarded;
         private Action pendingOnSuccess;
@@ -34,7 +37,10 @@ namespace Autech.LevelPlay
 
         public RewardedAdController(string adUnitId)
         {
+            telemetryUnit = adUnitId;
             rewardedAd = new LevelPlayRewardedAd(adUnitId);
+            rewardedAd.OnAdDisplayed += info => AdTelemetry.Report(AdTelemetryFormat.Rewarded, AdTelemetryAction.Displayed, info?.PlacementName ?? telemetryPlacement);
+            rewardedAd.OnAdClicked += info => AdTelemetry.Report(AdTelemetryFormat.Rewarded, AdTelemetryAction.Clicked, info?.PlacementName ?? telemetryPlacement);
             rewardedAd.OnAdLoaded += HandleLoaded;
             rewardedAd.OnAdLoadFailed += HandleLoadFailed;
             rewardedAd.OnAdDisplayFailed += HandleDisplayFailed;
@@ -45,6 +51,7 @@ namespace Autech.LevelPlay
         public void LoadAd()
         {
             CancelRetry();
+            AdTelemetry.Report(AdTelemetryFormat.Rewarded, AdTelemetryAction.Request, telemetryUnit);
             rewardedAd.LoadAd();
         }
 
@@ -55,8 +62,10 @@ namespace Autech.LevelPlay
         /// </summary>
         public void Show(Action<LevelPlayReward> onRewarded, Action onSuccess, Action onFailure, string placementName = null)
         {
+            telemetryPlacement = placementName ?? telemetryUnit;
             if (!IsReady)
             {
+                AdTelemetry.Report(AdTelemetryFormat.Rewarded, AdTelemetryAction.DisplayFailed, telemetryPlacement);
                 AdLog.Warn("Rewarded ad not ready.");
                 onFailure?.Invoke();
                 LoadAd();
@@ -64,6 +73,7 @@ namespace Autech.LevelPlay
             }
 
             pendingOnRewarded = onRewarded;
+            telemetryRewardPending = true;
             pendingOnSuccess = onSuccess;
             pendingOnFailure = onFailure;
 
@@ -78,17 +88,21 @@ namespace Autech.LevelPlay
 
         private void HandleLoaded(LevelPlayAdInfo info)
         {
+            AdTelemetry.Report(AdTelemetryFormat.Rewarded, AdTelemetryAction.Loaded, telemetryUnit);
             retryAttempt = 0;
         }
 
         private void HandleLoadFailed(LevelPlayAdError error)
         {
+            AdTelemetry.Report(AdTelemetryFormat.Rewarded, AdTelemetryAction.LoadFailed, telemetryUnit, error.ErrorCode);
             AdLog.Warn($"Rewarded load failed: {error}");
             _ = RetryLoadAsync();
         }
 
         private void HandleDisplayFailed(LevelPlayAdInfo info, LevelPlayAdError error)
         {
+            telemetryRewardPending = false;
+            AdTelemetry.Report(AdTelemetryFormat.Rewarded, AdTelemetryAction.DisplayFailed, telemetryPlacement, error.ErrorCode);
             AdLog.Warn($"Rewarded display failed: {error}");
             var onFailure = pendingOnFailure;
             ClearPendingCallbacks();
@@ -98,6 +112,11 @@ namespace Autech.LevelPlay
 
         private void HandleRewarded(LevelPlayAdInfo info, LevelPlayReward reward)
         {
+            if (telemetryRewardPending)
+            {
+                telemetryRewardPending = false;
+                AdTelemetry.Report(AdTelemetryFormat.Rewarded, AdTelemetryAction.Rewarded, info?.PlacementName ?? telemetryPlacement);
+            }
             var onRewarded = pendingOnRewarded;
             pendingOnRewarded = null;
             onRewarded?.Invoke(reward);
@@ -106,6 +125,7 @@ namespace Autech.LevelPlay
 
         private void HandleClosed(LevelPlayAdInfo info)
         {
+            AdTelemetry.Report(AdTelemetryFormat.Rewarded, AdTelemetryAction.Closed, info?.PlacementName ?? telemetryPlacement);
             var onSuccess = pendingOnSuccess;
             pendingOnSuccess = null;
             pendingOnFailure = null;
@@ -147,6 +167,7 @@ namespace Autech.LevelPlay
 
             if (!token.IsCancellationRequested)
             {
+                AdTelemetry.Report(AdTelemetryFormat.Rewarded, AdTelemetryAction.Request, telemetryUnit);
                 rewardedAd.LoadAd();
             }
         }

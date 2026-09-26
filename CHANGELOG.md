@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [1.2.3] - 2026-09-26
+
+### Added
+- **Ad lifecycle telemetry for analytics integrations.** A new `AdTelemetry.Event`
+  (`Autech.LevelPlay`) reports `Request`, `Loaded`, `LoadFailed`, `Displayed`,
+  `DisplayFailed`, `Clicked`, `Closed` and `Rewarded` for rewarded, interstitial and
+  banner ads, with the placement and error code. The package has no dependency on any
+  analytics SDK: an analytics package subscribes to the event and maps it itself (see
+  `com.autech.gameanalytics`). Observability only: each listener runs inside its own
+  try/catch, so a failing listener can never block another listener, an SDK call or reward
+  settlement, and the reward event fires once per accepted show even if the native reward
+  callback repeats.
+
 ## [1.2.2] - 2026-09-26
 
 ### Fixed
